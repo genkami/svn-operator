@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: f9c430bf.k8s.7nobo.me
+  resourceName: f9c430bf.k8s.oyasumi.club

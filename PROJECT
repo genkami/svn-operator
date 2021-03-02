@@ -1,4 +1,4 @@
-domain: k8s.7nobo.me
+domain: k8s.oyasumi.club
 layout: go.kubebuilder.io/v3
 projectName: svn-operator
 repo: github.com/genkami/svn-operator

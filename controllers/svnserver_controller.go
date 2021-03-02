@@ -34,9 +34,9 @@ type SVNServerReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=svn.k8s.7nobo.me,resources=svnservers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=svn.k8s.7nobo.me,resources=svnservers/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=svn.k8s.7nobo.me,resources=svnservers/finalizers,verbs=update
+// +kubebuilder:rbac:groups=svn.k8s.oyasumi.club,resources=svnservers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=svn.k8s.oyasumi.club,resources=svnservers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=svn.k8s.oyasumi.club,resources=svnservers/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

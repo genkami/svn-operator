@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: svnservers.svn.k8s.7nobo.me
+  name: svnservers.svn.k8s.oyasumi.club
 spec:
-  group: svn.k8s.7nobo.me
+  group: svn.k8s.oyasumi.club
   names:
     kind: SVNServer
     listKind: SVNServerList

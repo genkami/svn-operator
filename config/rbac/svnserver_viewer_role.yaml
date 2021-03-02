@@ -5,7 +5,7 @@ metadata:
   name: svnserver-viewer-role
 rules:
 - apiGroups:
-  - svn.k8s.7nobo.me
+  - svn.k8s.oyasumi.club
   resources:
   - svnservers
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - svn.k8s.7nobo.me
+  - svn.k8s.oyasumi.club
   resources:
   - svnservers/status
   verbs:

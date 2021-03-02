@@ -5,7 +5,7 @@ metadata:
   name: svnserver-editor-role
 rules:
 - apiGroups:
-  - svn.k8s.7nobo.me
+  - svn.k8s.oyasumi.club
   resources:
   - svnservers
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - svn.k8s.7nobo.me
+  - svn.k8s.oyasumi.club
   resources:
   - svnservers/status
   verbs:
