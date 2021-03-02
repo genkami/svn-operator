@@ -1,0 +1,7 @@
+apiVersion: svn.k8s.7nobo.me/v1alpha1
+kind: SVNServer
+metadata:
+  name: svnserver-sample
+spec:
+  # Add fields here
+  foo: bar

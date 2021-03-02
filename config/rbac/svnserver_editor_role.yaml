@@ -1,0 +1,24 @@
+# permissions for end users to edit svnservers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: svnserver-editor-role
+rules:
+- apiGroups:
+  - svn.k8s.7nobo.me
+  resources:
+  - svnservers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - svn.k8s.7nobo.me
+  resources:
+  - svnservers/status
+  verbs:
+  - get

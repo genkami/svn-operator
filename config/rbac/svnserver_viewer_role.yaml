@@ -1,0 +1,20 @@
+# permissions for end users to view svnservers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: svnserver-viewer-role
+rules:
+- apiGroups:
+  - svn.k8s.7nobo.me
+  resources:
+  - svnservers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - svn.k8s.7nobo.me
+  resources:
+  - svnservers/status
+  verbs:
+  - get
