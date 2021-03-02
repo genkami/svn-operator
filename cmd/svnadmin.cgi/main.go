@@ -18,8 +18,8 @@ func main() {
 func RootHandler() http.Handler {
 	scriptName := os.Getenv("SCRIPT_NAME")
 	r := mux.NewRouter()
-	r.HandleFunc(scriptName+"/users", UsersHandler)
-	r.HandleFunc(scriptName+"/repo/{name:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?}", RepoHandler)
+	r.HandleFunc(scriptName+"/users", UsersHandler).Methods(http.MethodPost)
+	r.HandleFunc(scriptName+"/repo/{name:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?}", RepoHandler).Methods(http.MethodPost)
 	return r
 }
 
