@@ -1,0 +1,8 @@
+domain: k8s.7nobo.me
+layout: go.kubebuilder.io/v3
+projectName: svn-operator
+repo: github.com/genkami/svn-operator
+version: 3-alpha
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
