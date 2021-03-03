@@ -20,18 +20,38 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	svnv1alpha1 "github.com/genkami/svn-operator/api/v1alpha1"
 )
 
+const (
+	ReposVolumeName = "repos"
+	ReposVolumePath = "/svn"
+
+	LabelAppKey          = "app"
+	LabelAppValue        = "subversion"
+	LabelInstanceNameKey = "svn.k8s.oyasumi.club/name"
+
+	ConfigMapKeyAuthUserFile       = "AuthUserFile"
+	ConfigMapKeyAuthzSVNAccessFile = "AuthzSVNAccessFile"
+	ConfigMapKeyRepos              = "Repos"
+)
+
 // SVNServerReconciler reconciles a SVNServer object
 type SVNServerReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log                   logr.Logger
+	Scheme                *runtime.Scheme
+	DefaultSVNServerImage string
 }
 
 // +kubebuilder:rbac:groups=svn.k8s.oyasumi.club,resources=svnservers,verbs=get;list;watch;create;update;patch;delete
@@ -48,16 +68,223 @@ type SVNServerReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
 func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("svnserver", req.NamespacedName)
+	log := r.Log.WithValues("svnserver", req.NamespacedName)
 
-	// your logic here
+	svnServer := &svnv1alpha1.SVNServer{}
+	err := r.Get(ctx, req.NamespacedName, svnServer)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// The object cloud have been deleted asynchronously.
+			log.Info("SVNServer not found; ignoring.")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get SVNServer")
+		return ctrl.Result{}, err
+	}
 
+	// TODO: find Service related to StatefulSet and create it if it doesn't exist.
+	// Do not create it in createStatefulSet because creating two objects at once
+	// has potential race conditions.
+
+	found := &appsv1.StatefulSet{}
+	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, found)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err = r.createStatefulSet(ctx, log, svnServer); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
+		log.Error(err, "Failed to get StatefulSet")
+		return ctrl.Result{}, err
+	}
+
+	// TODO: Get ConfigMap and create it if it doesn't exist.
+
+	// TODO: Update StatefulSet
+	// TODO: Update ConfigMap
 	return ctrl.Result{}, nil
+}
+
+// Creates a StatefulSet and is corresponding Service
+func (r *SVNServerReconciler) createStatefulSet(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
+	if err := r.createService(ctx, log, svn); err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	ss := r.statefulSetFor(svn)
+	log = log.WithValues("StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
+	log.Info("Creating a new StatefulSet")
+	if err := r.Create(ctx, ss); err != nil {
+		log.Error(err, "Failed to create new StatefulSet")
+		return err
+	}
+	return nil
+}
+
+func (r *SVNServerReconciler) createService(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
+	svc := r.serviceFor(svn)
+	log = log.WithValues("Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
+	log.Info("Creating a new Service")
+	if err := r.Create(ctx, svc); err != nil {
+		log.Error(err, "Failed to create new Service")
+		return err
+	}
+	return nil
+}
+
+func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.StatefulSet {
+	labels := r.labelsFor(s)
+	replicas := int32(1)
+	ss := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      s.Name,
+			Namespace: s.Namespace,
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "svn",
+							Image: r.DefaultSVNServerImage,
+							Ports: []corev1.ContainerPort{{
+								ContainerPort: 80,
+								Name:          "http",
+							}},
+							ReadinessProbe: &corev1.Probe{
+								Handler: corev1.Handler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/healthz",
+										Port: intstr.FromInt(80),
+									},
+								},
+							},
+							LivenessProbe: &corev1.Probe{
+								Handler: corev1.Handler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/healthz",
+										Port: intstr.FromInt(80),
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{{
+								Name:      ReposVolumeName,
+								MountPath: ReposVolumePath,
+							}},
+						},
+					},
+				},
+			},
+			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: ReposVolumeName,
+				},
+			}},
+			ServiceName: s.Name,
+		},
+	}
+	r.overrideWithPodTemplate(s, ss)
+	ctrl.SetControllerReference(s, ss, r.Scheme)
+	return ss
+}
+
+func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, ss *appsv1.StatefulSet) {
+	// TODO
+}
+
+func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) *corev1.Service {
+	labels := r.labelsFor(s)
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      s.Name,
+			Namespace: s.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
+				Name: "http",
+				Port: 80,
+			}},
+			Selector:  labels,
+			ClusterIP: "None",
+		},
+	}
+	ctrl.SetControllerReference(s, svc, r.Scheme)
+	return svc
+}
+
+// TODO: Use SVNRepository, SVNUser, and SVNGroup
+func (r *SVNServerReconciler) configMapFor(s *svnv1alpha1.SVNServer) *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      s.Name,
+			Namespace: s.Namespace,
+		},
+		Data: map[string]string{
+			ConfigMapKeyAuthUserFile:       r.authUserFileFor(s),
+			ConfigMapKeyAuthzSVNAccessFile: r.authzSVNAccessFileFor(s),
+			ConfigMapKeyRepos:              r.reposConfigFor(s),
+		},
+	}
+	ctrl.SetControllerReference(s, cm, r.Scheme)
+	return cm
+}
+
+func (r *SVNServerReconciler) authUserFileFor(s *svnv1alpha1.SVNServer) string {
+	// TODO
+	// admin:hogefuga (for test)
+	return `
+admin:{SHA}LxoHQl0nHaVtqqtU9KO/J8O75JM=
+`
+}
+
+func (r *SVNServerReconciler) authzSVNAccessFileFor(s *svnv1alpha1.SVNServer) string {
+	// TODO
+	return `
+[groups]
+all = admin
+
+[example-rw-repo:/]
+* =
+@all = rw
+
+[example-r-repo:/]
+* =
+@all = r
+
+[example-private-repo:/]
+* =
+@all =
+`
+}
+
+func (r *SVNServerReconciler) reposConfigFor(s *svnv1alpha1.SVNServer) string {
+	// TODO
+	return `
+repositories:
+- name: example-rw-repo
+- name: example-r-repo
+- name: example-private-repo
+`
+}
+
+func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]string {
+	return map[string]string{
+		LabelAppKey:          LabelAppValue,
+		LabelInstanceNameKey: s.Name,
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SVNServerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&svnv1alpha1.SVNServer{}).
+		Owns(&appsv1.StatefulSet{}).
 		Complete(r)
 }

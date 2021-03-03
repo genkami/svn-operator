@@ -29,25 +29,11 @@ type SVNServerSpec struct {
 
 	// +kubebuilder:validation:Required
 	// VolumeClaimTemplate is a PVC to store SVN repositories and configuration files in.
-	VolumeClaimTemplate corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	VolumeClaimTemplate corev1.PersistentVolumeClaimSpec `json:"volumeClaimTemplate,omitempty"`
 }
 
 // PodTemplate is an optional template to create SVN server pods.
 type PodTemplate struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
-	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-	//
-	// NOTE: This field is REQUIRED and the ServiceAccount should have the following permissions:
-	//   * get, list, and watch SVNRepository
-	//   * get, update, and patch SVNRepository/status
-	//   * get, list, and watch SVNAccount
-	//   * get, update, and patch SVNAccount/status
-	//   * get, list, and watch SVNGroup
-	//   * get, update, and patch SVNGroup/status
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
-
 	// +kubebuilder:validation:Optional
 	// Image specifies a container image of SVN server.
 	// If not specified, the default value will be used.
@@ -58,6 +44,12 @@ type PodTemplate struct {
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
