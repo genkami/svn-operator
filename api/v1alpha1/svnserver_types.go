@@ -40,11 +40,12 @@ type PodTemplate struct {
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 	//
 	// NOTE: This field is REQUIRED and the ServiceAccount should have the following permissions:
+	//   * get, list, and watch SVNRepository
+	//   * get, update, and patch SVNRepository/status
 	//   * get, list, and watch SVNAccount
 	//   * get, update, and patch SVNAccount/status
 	//   * get, list, and watch SVNGroup
 	//   * get, update, and patch SVNGroup/status
-	//   * get, list, watch, and create corev1.Secret
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// +kubebuilder:validation:Optional
