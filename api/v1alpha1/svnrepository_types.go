@@ -25,17 +25,15 @@ import (
 
 // SVNRepositorySpec defines the desired state of SVNRepository
 type SVNRepositorySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of SVNRepository. Edit SVNRepository_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Required
+	// The name of the SVNServer
+	SVNServer string `json:"server,omitempty"`
 }
 
 // SVNRepositoryStatus defines the observed state of SVNRepository
 type SVNRepositoryStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +Kubebuilder:validation:Optional
+	Conditions []Condition `json:"conditions"`
 }
 
 // +kubebuilder:object:root=true
