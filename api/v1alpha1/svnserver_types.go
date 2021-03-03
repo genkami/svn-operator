@@ -77,11 +77,11 @@ type PodTemplate struct {
 // SVNServerStatus defines the observed state of SVNServer
 type SVNServerStatus struct {
 	// +kubebuilder:validation:Optional
-	Conditions []SVNServerCondition `json:"conditions"`
+	Conditions []Condition `json:"conditions"`
 }
 
-type SVNServerCondition struct {
-	Type SVNServerConditionType `json:"type"`
+type Condition struct {
+	Type ConditionType `json:"type"`
 
 	Reason string `json:"reason,omitempty"`
 
@@ -89,10 +89,12 @@ type SVNServerCondition struct {
 	TransitionTime string `json:"transitionTime"`
 }
 
-type SVNServerConditionType string
+type ConditionType string
 
 const (
-	SVNServerConditionTypeSynced SVNServerConditionType = "Synced"
+	ConditionTypeNone   ConditionType = ""
+	ConditionTypeSynced               = "Synced"
+	ConditionTypeFailed               = "Failed"
 )
 
 // +kubebuilder:object:root=true

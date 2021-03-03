@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - svn.k8s.oyasumi.club
   resources:
+  - svngroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svngroups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svngroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
   - svnservers
   verbs:
   - create
