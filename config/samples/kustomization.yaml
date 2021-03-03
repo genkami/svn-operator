@@ -3,4 +3,5 @@ resources:
 - svn_v1alpha1_svnserver.yaml
 - svn_v1alpha1_svngroup.yaml
 - svn_v1alpha1_svnrepository.yaml
+- svn_v1alpha1_svnuser.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

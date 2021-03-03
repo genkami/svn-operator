@@ -102,6 +102,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SVNRepository")
 		os.Exit(1)
 	}
+	if err = (&controllers.SVNUserReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("SVNUser"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SVNUser")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {

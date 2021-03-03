@@ -1,0 +1,24 @@
+# permissions for end users to edit svnusers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: svnuser-editor-role
+rules:
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers/status
+  verbs:
+  - get

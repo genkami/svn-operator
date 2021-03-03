@@ -15,6 +15,10 @@ resources:
   group: svn
   kind: SVNRepository
   version: v1alpha1
+- crdVersion: v1
+  group: svn
+  kind: SVNUser
+  version: v1alpha1
 version: 3-alpha
 plugins:
   manifests.sdk.operatorframework.io/v2: {}

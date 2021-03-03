@@ -1,0 +1,20 @@
+# permissions for end users to view svnusers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: svnuser-viewer-role
+rules:
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers/status
+  verbs:
+  - get

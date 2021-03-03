@@ -1,0 +1,7 @@
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNUser
+metadata:
+  name: svnuser-sample
+spec:
+  # Add fields here
+  foo: bar
