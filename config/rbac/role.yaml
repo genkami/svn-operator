@@ -84,3 +84,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnusers/status
+  verbs:
+  - get
+  - patch
+  - update

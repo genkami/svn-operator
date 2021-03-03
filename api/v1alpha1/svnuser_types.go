@@ -25,11 +25,15 @@ import (
 
 // SVNUserSpec defines the desired state of SVNUser
 type SVNUserSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Groups is a list of SVNGroups that the user belongs to.
+	Groups []string `json:"groups,omitempty"`
 
-	// Foo is an example field of SVNUser. Edit SVNUser_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern="^[a-z0-9]{40}$"
+	// PasswordSHA1 is a SHA1 hash of the user's password.
+	// This must be computed elsewhere in order to avoid additional complexity of
+	// letting controllers manage sensitive values.
+	PasswordSHA1 string `json:"passwordSHA1,omitempty"`
 }
 
 // SVNUserStatus defines the observed state of SVNUser

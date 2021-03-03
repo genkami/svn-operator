@@ -1,0 +1,64 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: svnusers.svn.k8s.oyasumi.club
+spec:
+  group: svn.k8s.oyasumi.club
+  names:
+    kind: SVNUser
+    listKind: SVNUserList
+    plural: svnusers
+    singular: svnuser
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: SVNUser is the Schema for the svnusers API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SVNUserSpec defines the desired state of SVNUser
+            properties:
+              groups:
+                description: Groups is a list of SVNGroups that the user belongs to.
+                items:
+                  type: string
+                type: array
+              passwordSHA1:
+                description: PasswordSHA1 is a SHA1 hash of the user's password. This
+                  must be computed elsewhere in order to avoid additional complexity
+                  of letting controllers manage sensitive values.
+                pattern: ^[a-z0-9]{40}$
+                type: string
+            type: object
+          status:
+            description: SVNUserStatus defines the observed state of SVNUser
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
