@@ -17,26 +17,83 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // SVNServerSpec defines the desired state of SVNServer
 type SVNServerSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +kubebuilder:validation:Required
+	// PodTemplate is a template to create Pods.
+	PodTemplate PodTemplate `json:"podTemplate,omitempty"`
 
-	// Foo is an example field of SVNServer. Edit SVNServer_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Required
+	// VolumeClaimTemplate is a PVC to store SVN repositories and configuration files in.
+	VolumeClaimTemplate corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+}
+
+// PodTemplate is an optional template to create SVN server pods.
+type PodTemplate struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+	//
+	// NOTE: This field is REQUIRED and the ServiceAccount should have the following permissions:
+	//   * get, list, and watch SVNAccount
+	//   * get, update, and patch SVNAccount/status
+	//   * get, list, and watch SVNGroup
+	//   * get, update, and patch SVNGroup/status
+	//   * get, list, watch, and create corev1.Secret
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// Image specifies a container image of SVN server.
+	// If not specified, the default value will be used.
+	Image string `json:"image,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// NodeSelector is a selector which must be true for the pod to fit on a node.
+	// Selector which must match a node's labels for the pod to be scheduled on that node.
+	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+	// If specified, these secrets will be passed to individual puller implementations for them to use. For example,
+	// in the case of docker, only DockerConfig type secrets are honored.
+	// More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// If specified, the pod's scheduling constraints
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// If specified, the pod's tolerations.
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // SVNServerStatus defines the observed state of SVNServer
 type SVNServerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +kubebuilder:validation:Optional
+	Conditions []SVNServerCondition `json:"conditions"`
 }
+
+type SVNServerCondition struct {
+	Type SVNServerConditionType `json:"type"`
+
+	Reason string `json:"reason,omitempty"`
+
+	// The time when the SVNServer's condition changed in RFC3339 format.
+	TransitionTime string `json:"transitionTime"`
+}
+
+type SVNServerConditionType string
+
+const (
+	SVNServerConditionTypeSynced SVNServerConditionType = "Synced"
+)
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
