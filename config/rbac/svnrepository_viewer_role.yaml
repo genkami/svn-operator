@@ -1,0 +1,20 @@
+# permissions for end users to view svnrepositories.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: svnrepository-viewer-role
+rules:
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnrepositories
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnrepositories/status
+  verbs:
+  - get

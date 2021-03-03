@@ -1,0 +1,24 @@
+# permissions for end users to edit svnrepositories.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: svnrepository-editor-role
+rules:
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnrepositories
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - svn.k8s.oyasumi.club
+  resources:
+  - svnrepositories/status
+  verbs:
+  - get
