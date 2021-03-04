@@ -86,8 +86,8 @@ type ConditionType string
 
 const (
 	ConditionTypeNone   ConditionType = ""
-	ConditionTypeSynced               = "Synced"
-	ConditionTypeFailed               = "Failed"
+	ConditionTypeSynced ConditionType = "Synced"
+	ConditionTypeFailed ConditionType = "Failed"
 )
 
 // +kubebuilder:object:root=true

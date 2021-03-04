@@ -33,6 +33,8 @@ type SVNUserSpec struct {
 	// PasswordSHA1 is a SHA1 hash of the user's password.
 	// This must be computed elsewhere in order to avoid additional complexity of
 	// letting controllers manage sensitive values.
+	// TODO: how do I store salts?
+	// TODO: is there any ways to be more secure?
 	PasswordSHA1 string `json:"passwordSHA1,omitempty"`
 }
 

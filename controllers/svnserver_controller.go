@@ -84,9 +84,16 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// TODO: find Service related to StatefulSet and create it if it doesn't exist.
-	// Do not create it in createStatefulSet because creating two objects at once
-	// has potential race conditions.
+	svc := &corev1.Service{}
+	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, svc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err = r.createService(ctx, log, svnServer); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
+	}
 
 	found := &appsv1.StatefulSet{}
 	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, found)
@@ -110,9 +117,6 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 // Creates a StatefulSet and is corresponding Service
 func (r *SVNServerReconciler) createStatefulSet(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
-	if err := r.createService(ctx, log, svn); err != nil && !errors.IsNotFound(err) {
-		return err
-	}
 	ss := r.statefulSetFor(svn)
 	log = log.WithValues("StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
 	log.Info("Creating a new StatefulSet")
