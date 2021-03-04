@@ -248,11 +248,6 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 					Labels: labels,
 				},
 			},
-			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: VolumeNameRepos,
-				},
-			}},
 			ServiceName: s.Name,
 		},
 	}
