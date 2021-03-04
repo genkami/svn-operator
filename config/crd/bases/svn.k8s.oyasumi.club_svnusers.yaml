@@ -42,9 +42,10 @@ spec:
                   type: string
                 type: array
               passwordSHA1:
-                description: PasswordSHA1 is a SHA1 hash of the user's password. This
-                  must be computed elsewhere in order to avoid additional complexity
-                  of letting controllers manage sensitive values.
+                description: 'PasswordSHA1 is a SHA1 hash of the user''s password.
+                  This must be computed elsewhere in order to avoid additional complexity
+                  of letting controllers manage sensitive values. TODO: how do I store
+                  salts? TODO: is there any ways to be more secure?'
                 pattern: ^[a-z0-9]{40}$
                 type: string
             type: object

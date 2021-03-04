@@ -95,8 +95,8 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	found := &appsv1.StatefulSet{}
-	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, found)
+	ss := &appsv1.StatefulSet{}
+	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, ss)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			if err = r.createStatefulSet(ctx, log, svnServer); err != nil {
@@ -108,7 +108,18 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// TODO: Get ConfigMap and create it if it doesn't exist.
+	cm := &corev1.ConfigMap{}
+	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, cm)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err = r.createConfigMap(ctx, log, svnServer); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
+		log.Error(err, "Failed to get ConfigMap")
+		return ctrl.Result{}, err
+	}
 
 	// TODO: Update StatefulSet
 	// TODO: Update ConfigMap
@@ -133,6 +144,17 @@ func (r *SVNServerReconciler) createService(ctx context.Context, log logr.Logger
 	log.Info("Creating a new Service")
 	if err := r.Create(ctx, svc); err != nil {
 		log.Error(err, "Failed to create new Service")
+		return err
+	}
+	return nil
+}
+
+func (r *SVNServerReconciler) createConfigMap(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
+	svc := r.configMapFor(svn)
+	log = log.WithValues("ConfigMap.Namespace", svc.Namespace, "ConfigMap.Name", svc.Name)
+	log.Info("Creating a new ConfigMap")
+	if err := r.Create(ctx, svc); err != nil {
+		log.Error(err, "Failed to create new ConfigMap")
 		return err
 	}
 	return nil
