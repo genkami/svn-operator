@@ -34,8 +34,10 @@ import (
 )
 
 const (
-	ReposVolumeName = "repos"
-	ReposVolumePath = "/svn"
+	VolumeNameRepos  = "repos"
+	VolumePathRepos  = "/svn"
+	VolumeNameConfig = "config"
+	VolumePathConfig = "/etc/svn-config/"
 
 	ContainerNameSVN = "svn"
 
@@ -177,13 +179,10 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{},
-				},
 			},
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: ReposVolumeName,
+					Name: VolumeNameRepos,
 				},
 			}},
 			ServiceName: s.Name,
@@ -195,11 +194,33 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 }
 
 func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, ss *appsv1.StatefulSet) {
+	var volume *corev1.Volume
+	for i := range ss.Spec.Template.Spec.Volumes {
+		v := &ss.Spec.Template.Spec.Volumes[i]
+		if v.Name == VolumeNameConfig {
+			volume = v
+			break
+		}
+	}
+	if volume == nil {
+		v := &corev1.Volume{Name: VolumeNameConfig}
+		ss.Spec.Template.Spec.Volumes = append(ss.Spec.Template.Spec.Volumes, *v)
+		volume = &ss.Spec.Template.Spec.Volumes[len(ss.Spec.Template.Spec.Volumes)-1]
+	}
+	volume.VolumeSource = corev1.VolumeSource{
+		ConfigMap: &corev1.ConfigMapVolumeSource{
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: s.Name,
+			},
+		},
+	}
+
 	var container *corev1.Container
 	for i := range ss.Spec.Template.Spec.Containers {
 		c := &ss.Spec.Template.Spec.Containers[i]
 		if c.Name == ContainerNameSVN {
 			container = c
+			break
 		}
 	}
 	if container == nil {
@@ -209,6 +230,7 @@ func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, 
 	if s.Spec.PodTemplate.Image != "" {
 		container.Image = s.Spec.PodTemplate.Image
 	}
+
 	if len(s.Spec.PodTemplate.NodeSelector) > 0 {
 		ss.Spec.Template.Spec.NodeSelector = map[string]string{}
 		for k, v := range s.Spec.PodTemplate.NodeSelector {
@@ -258,10 +280,13 @@ func (r *SVNServerReconciler) svnContainerFor(s *svnv1alpha1.SVNServer) corev1.C
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				Name:      ReposVolumeName,
-				MountPath: ReposVolumePath,
+				Name:      VolumeNameRepos,
+				MountPath: VolumePathRepos,
 			},
-			// TODO: mount ConfigMap
+			{
+				Name:      VolumeNameConfig,
+				MountPath: VolumePathConfig,
+			},
 		},
 	}
 }
