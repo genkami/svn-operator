@@ -54,8 +54,10 @@ const (
 // SVNServerReconciler reconciles a SVNServer object
 type SVNServerReconciler struct {
 	client.Client
-	Log                   logr.Logger
-	Scheme                *runtime.Scheme
+	Log    logr.Logger
+	Scheme *runtime.Scheme
+
+	// DefaultSVNServerImage is a Docker image name to run SVN server.
 	DefaultSVNServerImage string
 }
 
@@ -213,6 +215,26 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 }
 
 func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, ss *appsv1.StatefulSet) {
+	var volumeClaimIndex int = -1
+	for i := range ss.Spec.VolumeClaimTemplates {
+		pvc := &ss.Spec.VolumeClaimTemplates[i]
+		if pvc.Name == VolumeNameRepos {
+			volumeClaimIndex = i
+			break
+		}
+	}
+	if volumeClaimIndex < 0 {
+		pvc := corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: VolumeNameRepos,
+			},
+		}
+		ss.Spec.VolumeClaimTemplates = append(ss.Spec.VolumeClaimTemplates, pvc)
+		volumeClaimIndex = len(ss.Spec.VolumeClaimTemplates) - 1
+	}
+	ss.Spec.VolumeClaimTemplates[volumeClaimIndex] = *s.Spec.VolumeClaimTemplate.DeepCopy()
+	ss.Spec.VolumeClaimTemplates[volumeClaimIndex].Name = VolumeNameRepos
+
 	var volume *corev1.Volume
 	for i := range ss.Spec.Template.Spec.Volumes {
 		v := &ss.Spec.Template.Spec.Volumes[i]
@@ -248,6 +270,8 @@ func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, 
 	}
 	if s.Spec.PodTemplate.Image != "" {
 		container.Image = s.Spec.PodTemplate.Image
+	} else if container.Image == "" {
+		container.Image = r.DefaultSVNServerImage
 	}
 
 	if len(s.Spec.PodTemplate.NodeSelector) > 0 {

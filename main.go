@@ -90,9 +90,10 @@ func main() {
 	}
 
 	if err = (&controllers.SVNServerReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("SVNServer"),
-		Scheme: mgr.GetScheme(),
+		Client:                mgr.GetClient(),
+		Log:                   ctrl.Log.WithName("controllers").WithName("SVNServer"),
+		Scheme:                mgr.GetScheme(),
+		DefaultSVNServerImage: defaultImage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SVNServer")
 		os.Exit(1)
