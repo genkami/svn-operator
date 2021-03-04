@@ -26,6 +26,10 @@ import (
 // SVNGroupSpec defines the desired state of SVNGroup
 type SVNGroupSpec struct {
 	// +kubebuilder:validation:Required
+	// The name of the SVNServer
+	SVNServer string `json:"server,omitempty"`
+
+	// +kubebuilder:validation:Required
 	// The permissions that the group have.
 	Permissions []Permission `json:"permissions,omitempty"`
 }
