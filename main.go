@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -89,12 +90,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	if err = (&controllers.SVNServerReconciler{
 		Client:                mgr.GetClient(),
 		Log:                   ctrl.Log.WithName("controllers").WithName("SVNServer"),
 		Scheme:                mgr.GetScheme(),
 		DefaultSVNServerImage: defaultImage,
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SVNServer")
 		os.Exit(1)
 	}

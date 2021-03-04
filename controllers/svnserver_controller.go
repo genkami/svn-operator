@@ -52,6 +52,8 @@ const (
 	ConfigMapKeyAuthUserFile       = "AuthUserFile"
 	ConfigMapKeyAuthzSVNAccessFile = "AuthzSVNAccessFile"
 	ConfigMapKeyRepos              = "Repos"
+
+	IndexKeySVNServer = ".spec.svnServer"
 )
 
 // SVNServerReconciler reconciles a SVNServer object
@@ -133,21 +135,21 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	repos := &svnv1alpha1.SVNRepositoryList{}
-	err = r.List(ctx, repos, client.InNamespace(svnServer.Namespace))
+	err = r.List(ctx, repos, client.InNamespace(svnServer.Namespace), client.MatchingFields{IndexKeySVNServer: svnServer.Name})
 	if err != nil {
 		log.Error(err, "Failed to list SVNRepository")
 		return ctrl.Result{}, err
 	}
 
 	groups := &svnv1alpha1.SVNGroupList{}
-	err = r.List(ctx, groups, client.InNamespace(svnServer.Namespace))
+	err = r.List(ctx, groups, client.InNamespace(svnServer.Namespace), client.MatchingFields{IndexKeySVNServer: svnServer.Name})
 	if err != nil {
 		log.Error(err, "Failed to list SVNGroup")
 		return ctrl.Result{}, err
 	}
 
 	users := &svnv1alpha1.SVNUserList{}
-	err = r.List(ctx, users, client.InNamespace(svnServer.Namespace))
+	err = r.List(ctx, users, client.InNamespace(svnServer.Namespace), client.MatchingFields{IndexKeySVNServer: svnServer.Name})
 	if err != nil {
 		log.Error(err, "Failed to list SVNUser")
 		return ctrl.Result{}, err
@@ -459,7 +461,25 @@ func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]str
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *SVNServerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *SVNServerReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	if err := mgr.GetFieldIndexer().IndexField(ctx, &svnv1alpha1.SVNRepository{}, IndexKeySVNServer, func(rawObj client.Object) []string {
+		obj := rawObj.(*svnv1alpha1.SVNRepository)
+		return []string{obj.Spec.SVNServer}
+	}); err != nil {
+		return err
+	}
+	if err := mgr.GetFieldIndexer().IndexField(ctx, &svnv1alpha1.SVNGroup{}, IndexKeySVNServer, func(rawObj client.Object) []string {
+		obj := rawObj.(*svnv1alpha1.SVNGroup)
+		return []string{obj.Spec.SVNServer}
+	}); err != nil {
+		return err
+	}
+	if err := mgr.GetFieldIndexer().IndexField(ctx, &svnv1alpha1.SVNUser{}, IndexKeySVNServer, func(rawObj client.Object) []string {
+		obj := rawObj.(*svnv1alpha1.SVNUser)
+		return []string{obj.Spec.SVNServer}
+	}); err != nil {
+		return err
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&svnv1alpha1.SVNServer{}).
 		Watches(&source.Kind{Type: &svnv1alpha1.SVNRepository{}}, handler.EnqueueRequestsFromMapFunc(repositoryEnqueuer(mgr))).
