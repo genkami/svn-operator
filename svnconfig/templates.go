@@ -8,6 +8,13 @@ const rawTmplAuthzSVNAccessFile = `
 {{- $u -}}
 {{- end -}}{{/* $g.Users */}}
 {{ end -}}{{/* .Groups */}}
+{{- range $ri, $r := .Repositories -}}
+[{{- $r.Name -}}:/]
+* = 
+{{ range $pi, $p := $r.Permissions -}}
+{{- $p.Group }} = {{ $p.Permission }}
+{{ end -}}
+{{- end -}}{{/* .Repositories */}}
 `
 
 const rawTmplAuthUserFile = ``
