@@ -37,6 +37,8 @@ const (
 	ReposVolumeName = "repos"
 	ReposVolumePath = "/svn"
 
+	ContainerNameSVN = "svn"
+
 	LabelAppKey          = "app"
 	LabelAppValue        = "subversion"
 	LabelInstanceNameKey = "svn.k8s.oyasumi.club/name"
@@ -150,36 +152,7 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "svn",
-							Image: r.DefaultSVNServerImage,
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: 80,
-								Name:          "http",
-							}},
-							ReadinessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/healthz",
-										Port: intstr.FromInt(80),
-									},
-								},
-							},
-							LivenessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/healthz",
-										Port: intstr.FromInt(80),
-									},
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{{
-								Name:      ReposVolumeName,
-								MountPath: ReposVolumePath,
-							}},
-						},
-					},
+					Containers: []corev1.Container{},
 				},
 			},
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
@@ -196,7 +169,75 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 }
 
 func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, ss *appsv1.StatefulSet) {
-	// TODO
+	var container *corev1.Container
+	for i := range ss.Spec.Template.Spec.Containers {
+		c := &ss.Spec.Template.Spec.Containers[i]
+		if c.Name == ContainerNameSVN {
+			container = c
+		}
+	}
+	if container == nil {
+		ss.Spec.Template.Spec.Containers = append(ss.Spec.Template.Spec.Containers, r.svnContainerFor(s))
+		container = &ss.Spec.Template.Spec.Containers[len(ss.Spec.Template.Spec.Containers)-1]
+	}
+	if s.Spec.PodTemplate.Image != "" {
+		container.Image = s.Spec.PodTemplate.Image
+	}
+	if len(s.Spec.PodTemplate.NodeSelector) > 0 {
+		ss.Spec.Template.Spec.NodeSelector = map[string]string{}
+		for k, v := range s.Spec.PodTemplate.NodeSelector {
+			ss.Spec.Template.Spec.NodeSelector[k] = v
+		}
+	}
+	if s.Spec.PodTemplate.ServiceAccountName != "" {
+		ss.Spec.Template.Spec.ServiceAccountName = s.Spec.PodTemplate.ServiceAccountName
+	}
+	if len(s.Spec.PodTemplate.ImagePullSecrets) > 0 {
+		ss.Spec.Template.Spec.ImagePullSecrets = make([]corev1.LocalObjectReference, len(s.Spec.PodTemplate.ImagePullSecrets))
+		copy(ss.Spec.Template.Spec.ImagePullSecrets, s.Spec.PodTemplate.ImagePullSecrets)
+	}
+	if s.Spec.PodTemplate.Affinity != nil {
+		affinity := *s.Spec.PodTemplate.Affinity
+		ss.Spec.Template.Spec.Affinity = &affinity
+	}
+	if len(s.Spec.PodTemplate.Tolerations) > 0 {
+		ss.Spec.Template.Spec.Tolerations = make([]corev1.Toleration, len(s.Spec.PodTemplate.Tolerations))
+		copy(ss.Spec.Template.Spec.Tolerations, s.Spec.PodTemplate.Tolerations)
+	}
+}
+
+func (r *SVNServerReconciler) svnContainerFor(s *svnv1alpha1.SVNServer) corev1.Container {
+	return corev1.Container{
+		Name:  ContainerNameSVN,
+		Image: r.DefaultSVNServerImage,
+		Ports: []corev1.ContainerPort{{
+			ContainerPort: 80,
+			Name:          "http",
+		}},
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/healthz",
+					Port: intstr.FromInt(80),
+				},
+			},
+		},
+		LivenessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/healthz",
+					Port: intstr.FromInt(80),
+				},
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      ReposVolumeName,
+				MountPath: ReposVolumePath,
+			},
+			// TODO: mount ConfigMap
+		},
+	}
 }
 
 func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) *corev1.Service {
