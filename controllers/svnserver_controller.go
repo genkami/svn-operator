@@ -131,8 +131,19 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "Failed to update StatefulSet")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true}, nil
 	}
-	// TODO: Update ConfigMap
+
+	desiredCM := r.configMapFor(svnServer)
+	if !reflect.DeepEqual(desiredCM.Data, cm.Data) {
+		if err := r.Update(ctx, desiredCM); err != nil {
+			log.Error(err, "Failed to update ConfigMap")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	// TODO: Update SVNServer.Status
 	return ctrl.Result{}, nil
 }
 
