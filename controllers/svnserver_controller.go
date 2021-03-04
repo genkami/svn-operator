@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -123,7 +124,14 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// TODO: Update StatefulSet
+	desiredSS := ss.DeepCopy()
+	r.overrideWithPodTemplate(svnServer, desiredSS)
+	if !reflect.DeepEqual(desiredSS, ss) {
+		if err := r.Update(ctx, desiredSS); err != nil {
+			log.Error(err, "Failed to update StatefulSet")
+			return ctrl.Result{}, err
+		}
+	}
 	// TODO: Update ConfigMap
 	return ctrl.Result{}, nil
 }
