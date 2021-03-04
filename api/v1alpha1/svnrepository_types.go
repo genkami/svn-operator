@@ -27,7 +27,7 @@ import (
 type SVNRepositorySpec struct {
 	// +kubebuilder:validation:Required
 	// The name of the SVNServer
-	SVNServer string `json:"server,omitempty"`
+	SVNServer string `json:"svnServer,omitempty"`
 }
 
 // SVNRepositoryStatus defines the observed state of SVNRepository

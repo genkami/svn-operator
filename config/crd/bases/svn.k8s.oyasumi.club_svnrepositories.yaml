@@ -36,7 +36,7 @@ spec:
           spec:
             description: SVNRepositorySpec defines the desired state of SVNRepository
             properties:
-              server:
+              svnServer:
                 description: The name of the SVNServer
                 type: string
             type: object

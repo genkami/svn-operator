@@ -48,7 +48,7 @@ spec:
                   I store salts? \n TODO: is there any ways to be more secure?"
                 pattern: ^[a-z0-9]{40}$
                 type: string
-              server:
+              svnServer:
                 description: The name of the SVNServer
                 type: string
             type: object

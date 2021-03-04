@@ -27,7 +27,7 @@ import (
 type SVNUserSpec struct {
 	// +kubebuilder:validation:Required
 	// The name of the SVNServer
-	SVNServer string `json:"server,omitempty"`
+	SVNServer string `json:"svnServer,omitempty"`
 
 	// Groups is a list of SVNGroups that the user belongs to.
 	Groups []string `json:"groups,omitempty"`

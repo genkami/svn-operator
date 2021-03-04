@@ -3,5 +3,4 @@ kind: SVNRepository
 metadata:
   name: svnrepository-sample
 spec:
-  # Add fields here
-  foo: bar
+  svnServer: svnserver-sample

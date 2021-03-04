@@ -27,7 +27,7 @@ import (
 type SVNGroupSpec struct {
 	// +kubebuilder:validation:Required
 	// The name of the SVNServer
-	SVNServer string `json:"server,omitempty"`
+	SVNServer string `json:"svnServer,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// The permissions that the group have.

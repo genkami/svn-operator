@@ -30,6 +30,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	svnv1alpha1 "github.com/genkami/svn-operator/api/v1alpha1"
 )
@@ -59,6 +62,13 @@ type SVNServerReconciler struct {
 
 	// DefaultSVNServerImage is a Docker image name to run SVN server.
 	DefaultSVNServerImage string
+}
+
+type svnConfig struct {
+	server *svnv1alpha1.SVNServer
+	repos  *svnv1alpha1.SVNRepositoryList
+	groups *svnv1alpha1.SVNGroupList
+	users  *svnv1alpha1.SVNUserList
 }
 
 // +kubebuilder:rbac:groups=svn.k8s.oyasumi.club,resources=svnservers,verbs=get;list;watch;create;update;patch;delete
@@ -122,11 +132,39 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	repos := &svnv1alpha1.SVNRepositoryList{}
+	err = r.List(ctx, repos, client.InNamespace(svnServer.Namespace))
+	if err != nil {
+		log.Error(err, "Failed to list SVNRepository")
+		return ctrl.Result{}, err
+	}
+
+	groups := &svnv1alpha1.SVNGroupList{}
+	err = r.List(ctx, groups, client.InNamespace(svnServer.Namespace))
+	if err != nil {
+		log.Error(err, "Failed to list SVNGroup")
+		return ctrl.Result{}, err
+	}
+
+	users := &svnv1alpha1.SVNUserList{}
+	err = r.List(ctx, users, client.InNamespace(svnServer.Namespace))
+	if err != nil {
+		log.Error(err, "Failed to list SVNUser")
+		return ctrl.Result{}, err
+	}
+
+	cfg := &svnConfig{
+		server: svnServer,
+		repos:  repos,
+		groups: groups,
+		users:  users,
+	}
+
 	cm := &corev1.ConfigMap{}
 	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, cm)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err = r.createConfigMap(ctx, log, svnServer); err != nil {
+			if err = r.createConfigMap(ctx, log, cfg); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{Requeue: true}, nil
@@ -145,7 +183,7 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	desiredCM := r.configMapFor(svnServer)
+	desiredCM := r.configMapFor(cfg)
 	if !reflect.DeepEqual(desiredCM.Data, cm.Data) {
 		if err := r.Update(ctx, desiredCM); err != nil {
 			log.Error(err, "Failed to update ConfigMap")
@@ -181,8 +219,8 @@ func (r *SVNServerReconciler) createService(ctx context.Context, log logr.Logger
 	return nil
 }
 
-func (r *SVNServerReconciler) createConfigMap(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
-	svc := r.configMapFor(svn)
+func (r *SVNServerReconciler) createConfigMap(ctx context.Context, log logr.Logger, cfg *svnConfig) error {
+	svc := r.configMapFor(cfg)
 	log = log.WithValues("ConfigMap.Namespace", svc.Namespace, "ConfigMap.Name", svc.Name)
 	log.Info("Creating a new ConfigMap")
 	if err := r.Create(ctx, svc); err != nil {
@@ -364,23 +402,23 @@ func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) *corev1.Servi
 }
 
 // TODO: Use SVNRepository, SVNUser, and SVNGroup
-func (r *SVNServerReconciler) configMapFor(s *svnv1alpha1.SVNServer) *corev1.ConfigMap {
+func (r *SVNServerReconciler) configMapFor(cfg *svnConfig) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      s.Name,
-			Namespace: s.Namespace,
+			Name:      cfg.server.Name,
+			Namespace: cfg.server.Namespace,
 		},
 		Data: map[string]string{
-			ConfigMapKeyAuthUserFile:       r.authUserFileFor(s),
-			ConfigMapKeyAuthzSVNAccessFile: r.authzSVNAccessFileFor(s),
-			ConfigMapKeyRepos:              r.reposConfigFor(s),
+			ConfigMapKeyAuthUserFile:       r.authUserFileFor(cfg),
+			ConfigMapKeyAuthzSVNAccessFile: r.authzSVNAccessFileFor(cfg),
+			ConfigMapKeyRepos:              r.reposConfigFor(cfg),
 		},
 	}
-	ctrl.SetControllerReference(s, cm, r.Scheme)
+	ctrl.SetControllerReference(cfg.server, cm, r.Scheme)
 	return cm
 }
 
-func (r *SVNServerReconciler) authUserFileFor(s *svnv1alpha1.SVNServer) string {
+func (r *SVNServerReconciler) authUserFileFor(cfg *svnConfig) string {
 	// TODO
 	// admin:hogefuga (for test)
 	return `
@@ -388,7 +426,7 @@ admin:{SHA}LxoHQl0nHaVtqqtU9KO/J8O75JM=
 `
 }
 
-func (r *SVNServerReconciler) authzSVNAccessFileFor(s *svnv1alpha1.SVNServer) string {
+func (r *SVNServerReconciler) authzSVNAccessFileFor(cfg *svnConfig) string {
 	// TODO
 	return `
 [groups]
@@ -408,7 +446,7 @@ all = admin
 `
 }
 
-func (r *SVNServerReconciler) reposConfigFor(s *svnv1alpha1.SVNServer) string {
+func (r *SVNServerReconciler) reposConfigFor(cfg *svnConfig) string {
 	// TODO
 	return `
 repositories:
@@ -429,6 +467,55 @@ func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]str
 func (r *SVNServerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&svnv1alpha1.SVNServer{}).
+		Watches(&source.Kind{Type: &svnv1alpha1.SVNRepository{}}, handler.EnqueueRequestsFromMapFunc(repositoryEnqueuer(mgr))).
+		Watches(&source.Kind{Type: &svnv1alpha1.SVNGroup{}}, handler.EnqueueRequestsFromMapFunc(groupEnqueuer(mgr))).
+		Watches(&source.Kind{Type: &svnv1alpha1.SVNUser{}}, handler.EnqueueRequestsFromMapFunc(userEnqueuer(mgr))).
 		Owns(&appsv1.StatefulSet{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
+}
+
+func repositoryEnqueuer(mgr ctrl.Manager) handler.MapFunc {
+	return func(obj client.Object) []reconcile.Request {
+		svn, ok := obj.(*svnv1alpha1.SVNRepository)
+		if !ok {
+			mgr.GetLogger().Info("Not an SVNRepository", "object", obj)
+		}
+		return []reconcile.Request{{
+			NamespacedName: types.NamespacedName{
+				Namespace: svn.Namespace,
+				Name:      svn.Spec.SVNServer,
+			},
+		}}
+	}
+}
+
+func groupEnqueuer(mgr ctrl.Manager) handler.MapFunc {
+	return func(obj client.Object) []reconcile.Request {
+		svn, ok := obj.(*svnv1alpha1.SVNGroup)
+		if !ok {
+			mgr.GetLogger().Info("Not an SVNGroup", "object", obj)
+		}
+		return []reconcile.Request{{
+			NamespacedName: types.NamespacedName{
+				Namespace: svn.Namespace,
+				Name:      svn.Spec.SVNServer,
+			},
+		}}
+	}
+}
+
+func userEnqueuer(mgr ctrl.Manager) handler.MapFunc {
+	return func(obj client.Object) []reconcile.Request {
+		svn, ok := obj.(*svnv1alpha1.SVNUser)
+		if !ok {
+			mgr.GetLogger().Info("Not an SVNUser", "object", obj)
+		}
+		return []reconcile.Request{{
+			NamespacedName: types.NamespacedName{
+				Namespace: svn.Namespace,
+				Name:      svn.Spec.SVNServer,
+			},
+		}}
+	}
 }
