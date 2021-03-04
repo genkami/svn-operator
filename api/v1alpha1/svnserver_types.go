@@ -29,7 +29,7 @@ type SVNServerSpec struct {
 
 	// +kubebuilder:validation:Required
 	// VolumeClaimTemplate is a PVC to store SVN repositories and configuration files in.
-	VolumeClaimTemplate corev1.PersistentVolumeClaimSpec `json:"volumeClaimTemplate,omitempty"`
+	VolumeClaimTemplate corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
 // PodTemplate is an optional template to create SVN server pods.

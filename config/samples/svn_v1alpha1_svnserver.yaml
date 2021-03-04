@@ -3,5 +3,10 @@ kind: SVNServer
 metadata:
   name: svnserver-sample
 spec:
-  # Add fields here
-  foo: bar
+  volumeClaimTemplate:
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 512M
