@@ -308,7 +308,7 @@ func (r *SVNServerReconciler) svnContainerFor(s *svnv1alpha1.SVNServer) corev1.C
 		ReadinessProbe: &corev1.Probe{
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/healthz",
+					Path: "/",
 					Port: intstr.FromInt(80),
 				},
 			},
@@ -316,7 +316,7 @@ func (r *SVNServerReconciler) svnContainerFor(s *svnv1alpha1.SVNServer) corev1.C
 		LivenessProbe: &corev1.Probe{
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/healthz",
+					Path: "/",
 					Port: intstr.FromInt(80),
 				},
 			},

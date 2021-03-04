@@ -1,0 +1,24 @@
+FROM ubuntu:focal
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+  && apt-get install -y \
+        apache2 \
+        libapache2-mod-svn \
+        subversion \
+        sudo \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN a2enmod dav_svn
+
+EXPOSE 80
+
+WORKDIR /work
+COPY ./docker/svn/entrypoint.sh /work
+COPY ./docker/svn/initialize-repo.sh /work
+COPY ./docker/svn/apache2.conf /etc/apache2/
+COPY ./docker/svn/envvars /etc/apache2/
+COPY ./docker/svn/html/*.html /var/www/html/
+ENTRYPOINT ["/work/entrypoint.sh"]
