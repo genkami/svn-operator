@@ -190,7 +190,11 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	desiredCM := r.configMapFor(factory)
+	desiredCM, err := r.configMapFor(factory)
+	if err != nil {
+		log.Error(err, "Failed to compute desired configmap")
+		return ctrl.Result{}, err
+	}
 	if !reflect.DeepEqual(desiredCM.Data, cm.Data) {
 		if err := r.Update(ctx, desiredCM); err != nil {
 			log.Error(err, "Failed to update ConfigMap")
@@ -204,7 +208,11 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 // Creates a StatefulSet and is corresponding Service
 func (r *SVNServerReconciler) createStatefulSet(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
-	ss := r.statefulSetFor(svn)
+	ss, err := r.statefulSetFor(svn)
+	if err != nil {
+		log.Error(err, "Failed to compute desired StatefulSet")
+		return err
+	}
 	log = log.WithValues("StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
 	log.Info("Creating a new StatefulSet")
 	if err := r.Create(ctx, ss); err != nil {
@@ -215,7 +223,11 @@ func (r *SVNServerReconciler) createStatefulSet(ctx context.Context, log logr.Lo
 }
 
 func (r *SVNServerReconciler) createService(ctx context.Context, log logr.Logger, svn *svnv1alpha1.SVNServer) error {
-	svc := r.serviceFor(svn)
+	svc, err := r.serviceFor(svn)
+	if err != nil {
+		log.Error(err, "Failed to compute desired Service")
+		return err
+	}
 	log = log.WithValues("Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
 	log.Info("Creating a new Service")
 	if err := r.Create(ctx, svc); err != nil {
@@ -226,17 +238,21 @@ func (r *SVNServerReconciler) createService(ctx context.Context, log logr.Logger
 }
 
 func (r *SVNServerReconciler) createConfigMap(ctx context.Context, log logr.Logger, f *GeneratorFactory) error {
-	svc := r.configMapFor(f)
-	log = log.WithValues("ConfigMap.Namespace", svc.Namespace, "ConfigMap.Name", svc.Name)
+	cm, err := r.configMapFor(f)
+	if err != nil {
+		log.Error(err, "Failed to compute desired ConfigMap")
+		return err
+	}
+	log = log.WithValues("ConfigMap.Namespace", cm.Namespace, "ConfigMap.Name", cm.Name)
 	log.Info("Creating a new ConfigMap")
-	if err := r.Create(ctx, svc); err != nil {
+	if err := r.Create(ctx, cm); err != nil {
 		log.Error(err, "Failed to create new ConfigMap")
 		return err
 	}
 	return nil
 }
 
-func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.StatefulSet {
+func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) (*appsv1.StatefulSet, error) {
 	labels := r.labelsFor(s)
 	replicas := int32(1)
 	ss := &appsv1.StatefulSet{
@@ -258,8 +274,11 @@ func (r *SVNServerReconciler) statefulSetFor(s *svnv1alpha1.SVNServer) *appsv1.S
 		},
 	}
 	r.overrideWithPodTemplate(s, ss)
-	ctrl.SetControllerReference(s, ss, r.Scheme)
-	return ss
+	err := ctrl.SetControllerReference(s, ss, r.Scheme)
+	if err != nil {
+		return nil, err
+	}
+	return ss, nil
 }
 
 func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, ss *appsv1.StatefulSet) {
@@ -382,7 +401,7 @@ func (r *SVNServerReconciler) svnContainerFor(s *svnv1alpha1.SVNServer) corev1.C
 	}
 }
 
-func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) *corev1.Service {
+func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) (*corev1.Service, error) {
 	labels := r.labelsFor(s)
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -398,12 +417,15 @@ func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) *corev1.Servi
 			ClusterIP: "None",
 		},
 	}
-	ctrl.SetControllerReference(s, svc, r.Scheme)
-	return svc
+	err := ctrl.SetControllerReference(s, svc, r.Scheme)
+	if err != nil {
+		return nil, err
+	}
+	return svc, nil
 }
 
 // TODO: Use SVNRepository, SVNUser, and SVNGroup
-func (r *SVNServerReconciler) configMapFor(f *GeneratorFactory) *corev1.ConfigMap {
+func (r *SVNServerReconciler) configMapFor(f *GeneratorFactory) (*corev1.ConfigMap, error) {
 	gen := f.BuildGenerator()
 	// TODO: error handling
 	authUserFile, _ := gen.AuthUserFile()
@@ -422,8 +444,11 @@ func (r *SVNServerReconciler) configMapFor(f *GeneratorFactory) *corev1.ConfigMa
 			ConfigMapKeyRepos:              reposConfig,
 		},
 	}
-	ctrl.SetControllerReference(f.server, cm, r.Scheme)
-	return cm
+	err := ctrl.SetControllerReference(f.server, cm, r.Scheme)
+	if err != nil {
+		return nil, err
+	}
+	return cm, nil
 }
 
 func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]string {
