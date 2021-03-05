@@ -31,7 +31,7 @@ type SVNUserSpec struct {
 	SVNServer string `json:"svnServer,omitempty"`
 
 	// Groups is a list of SVNGroups that the user belongs to.
-	Groups []string `json:"groups,omitempty"`
+	Groups []GroupRef `json:"groups,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9+/=.${}]+$"
@@ -49,10 +49,18 @@ type SVNUserSpec struct {
 	EncryptedPassword string `json:"encryptedPassword,omitempty"`
 }
 
+// GroupRef is a reference to SVNGroups.
+type GroupRef struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9][a-zA-Z0-9.-]*$"
+	// Name is the name of the SVNGroup.
+	Name string `json:"name,omitempty"`
+}
+
 // SVNUserStatus defines the observed state of SVNUser
 type SVNUserStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +Kubebuilder:validation:Optional
+	Conditions []Condition `json:"conditions"`
 }
 
 // +kubebuilder:object:root=true

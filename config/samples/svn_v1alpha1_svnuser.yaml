@@ -5,6 +5,6 @@ metadata:
 spec:
   svnServer: svnserver-sample
   groups:
-    - svngroup-example
+    - name: svngroup-example
   # The password is 'foobar'
   encryptedPassword: $2y$05$lHorekjyyp9w2fXD/ppQLOJ2N1KmY.9yiJ0mZQlkIeUpUg8enPN4e
