@@ -33,15 +33,19 @@ type SVNUserSpec struct {
 	Groups []string `json:"groups,omitempty"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern="^[a-z0-9]{40}$"
-	// PasswordSHA1 is a SHA1 hash of the user's password.
+	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9+/=.${}]+$"
+	// EncryptedPassword is a password encrypted by `htpasswd`.
 	// This must be computed elsewhere in order to avoid additional complexity of
 	// letting controllers manage sensitive values.
 	//
-	// TODO: how do I store salts?
+	// This field can be computed by the following command:
+	//   $ htpasswd -nB USERNAME | cut -d : -f 2-
+	//   New password: (TYPE YOUR PASSWORD HERE)
+	//   Re-type new password: (TYPE YOUR PASSWORD HERE)
+	//   $2y$05$Z9loUIkf0DynjbD0UMEpneKCSKYfkTCaE/pwY8wt7MtKQILxKRwjG (example output)
 	//
-	// TODO: is there any ways to be more secure?
-	PasswordSHA1 string `json:"passwordSHA1,omitempty"`
+	// See https://httpd.apache.org/docs/2.4/misc/password_encryptions.html for more information.
+	EncryptedPassword string `json:"encryptedPassword,omitempty"`
 }
 
 // SVNUserStatus defines the observed state of SVNUser

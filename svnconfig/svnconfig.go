@@ -33,8 +33,8 @@ type Group struct {
 }
 
 type User struct {
-	Name         string
-	PasswordSHA1 string
+	Name              string
+	EncryptedPassword string
 }
 
 func (c *Config) AuthzSVNAccessFile() (string, error) {
