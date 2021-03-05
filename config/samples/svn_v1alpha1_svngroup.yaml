@@ -1,7 +1,17 @@
 apiVersion: svn.k8s.oyasumi.club/v1alpha1
 kind: SVNGroup
 metadata:
-  name: svngroup-sample
+  name: svngroup-sample-reader
+spec:
+  svnServer: svnserver-sample
+  permissions:
+  - repository: svnrepository-sample
+    permission: r
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNGroup
+metadata:
+  name: svngroup-sample-writer
 spec:
   svnServer: svnserver-sample
   permissions:

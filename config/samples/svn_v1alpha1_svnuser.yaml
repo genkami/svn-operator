@@ -1,10 +1,21 @@
 apiVersion: svn.k8s.oyasumi.club/v1alpha1
 kind: SVNUser
 metadata:
-  name: svnuser-sample
+  name: svnuser-sample-reader
 spec:
   svnServer: svnserver-sample
   groups:
-    - name: svngroup-example
+    - name: svngroup-example-reader
   # The password is 'foobar'
   encryptedPassword: $2y$05$lHorekjyyp9w2fXD/ppQLOJ2N1KmY.9yiJ0mZQlkIeUpUg8enPN4e
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNUser
+metadata:
+  name: svnuser-sample-writer
+spec:
+  svnServer: svnserver-sample
+  groups:
+    - name: svngroup-example-writer
+  # The password is 'quux'
+  encryptedPassword: $2y$05$skzShfjCsTKCYcvr55ByIO5G7icGU8Lofs2CpmR5AoGho9OzBLb4O

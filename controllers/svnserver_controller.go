@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	svnv1alpha1 "github.com/genkami/svn-operator/api/v1alpha1"
+	svnconfig "github.com/genkami/svn-operator/svnconfig"
 )
 
 const (
@@ -66,7 +67,7 @@ type SVNServerReconciler struct {
 	DefaultSVNServerImage string
 }
 
-type svnConfig struct {
+type GeneratorFactory struct {
 	server *svnv1alpha1.SVNServer
 	repos  *svnv1alpha1.SVNRepositoryList
 	groups *svnv1alpha1.SVNGroupList
@@ -155,7 +156,7 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	cfg := &svnConfig{
+	cfg := &GeneratorFactory{
 		server: svnServer,
 		repos:  repos,
 		groups: groups,
@@ -221,8 +222,8 @@ func (r *SVNServerReconciler) createService(ctx context.Context, log logr.Logger
 	return nil
 }
 
-func (r *SVNServerReconciler) createConfigMap(ctx context.Context, log logr.Logger, cfg *svnConfig) error {
-	svc := r.configMapFor(cfg)
+func (r *SVNServerReconciler) createConfigMap(ctx context.Context, log logr.Logger, f *GeneratorFactory) error {
+	svc := r.configMapFor(f)
 	log = log.WithValues("ConfigMap.Namespace", svc.Namespace, "ConfigMap.Name", svc.Name)
 	log.Info("Creating a new ConfigMap")
 	if err := r.Create(ctx, svc); err != nil {
@@ -399,58 +400,27 @@ func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) *corev1.Servi
 }
 
 // TODO: Use SVNRepository, SVNUser, and SVNGroup
-func (r *SVNServerReconciler) configMapFor(cfg *svnConfig) *corev1.ConfigMap {
+func (r *SVNServerReconciler) configMapFor(f *GeneratorFactory) *corev1.ConfigMap {
+	gen := f.BuildGenerator()
+	// TODO: error handling
+	authUserFile, _ := gen.AuthUserFile()
+	// TODO: error handling
+	authzSVNAccessFile, _ := gen.AuthzSVNAccessFile()
+	// TODO: error handling
+	reposConfig, _ := gen.ReposConfig()
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cfg.server.Name,
-			Namespace: cfg.server.Namespace,
+			Name:      f.server.Name,
+			Namespace: f.server.Namespace,
 		},
 		Data: map[string]string{
-			ConfigMapKeyAuthUserFile:       r.authUserFileFor(cfg),
-			ConfigMapKeyAuthzSVNAccessFile: r.authzSVNAccessFileFor(cfg),
-			ConfigMapKeyRepos:              r.reposConfigFor(cfg),
+			ConfigMapKeyAuthUserFile:       authUserFile,
+			ConfigMapKeyAuthzSVNAccessFile: authzSVNAccessFile,
+			ConfigMapKeyRepos:              reposConfig,
 		},
 	}
-	ctrl.SetControllerReference(cfg.server, cm, r.Scheme)
+	ctrl.SetControllerReference(f.server, cm, r.Scheme)
 	return cm
-}
-
-func (r *SVNServerReconciler) authUserFileFor(cfg *svnConfig) string {
-	// TODO
-	// admin:hogefuga (for test)
-	return `
-admin:{SHA}LxoHQl0nHaVtqqtU9KO/J8O75JM=
-`
-}
-
-func (r *SVNServerReconciler) authzSVNAccessFileFor(cfg *svnConfig) string {
-	// TODO
-	return `
-[groups]
-all = admin
-
-[example-rw-repo:/]
-* =
-@all = rw
-
-[example-r-repo:/]
-* =
-@all = r
-
-[example-private-repo:/]
-* =
-@all =
-`
-}
-
-func (r *SVNServerReconciler) reposConfigFor(cfg *svnConfig) string {
-	// TODO
-	return `
-repositories:
-- name: example-rw-repo
-- name: example-r-repo
-- name: example-private-repo
-`
 }
 
 func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]string {
@@ -458,6 +428,81 @@ func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]str
 		LabelAppKey:          LabelAppValue,
 		LabelInstanceNameKey: s.Name,
 	}
+}
+
+// TODO
+type ValidationErrors struct{}
+
+func (f *GeneratorFactory) BuildGenerator() *svnconfig.Generator {
+	repos := f.BuildRepositories()
+	groups := f.BuildGroups()
+	users := f.BuildUsers()
+	return &svnconfig.Generator{
+		Repositories: repos,
+		Groups:       groups,
+		Users:        users,
+	}
+}
+
+func (f *GeneratorFactory) BuildRepositories() []svnconfig.Repository {
+	repos := make([]svnconfig.Repository, 0, len(f.repos.Items))
+	for i := range f.repos.Items {
+		r := f.repos.Items[i]
+		perms := f.buildPermissionsOf(r.Name)
+		repos = append(repos, svnconfig.Repository{Name: r.Name, Permissions: perms})
+	}
+	return repos
+}
+
+func (f *GeneratorFactory) buildPermissionsOf(repoName string) []svnconfig.Permission {
+	perms := make([]svnconfig.Permission, 0, len(f.groups.Items))
+	for i := range f.groups.Items {
+		g := &f.groups.Items[i]
+		for j := range g.Spec.Permissions {
+			p := g.Spec.Permissions[j]
+			if repoName == p.Repository {
+				perms = append(perms, svnconfig.Permission{
+					Group:      g.Name,
+					Permission: p.Permission,
+				})
+			}
+		}
+	}
+	return perms
+}
+
+func (f *GeneratorFactory) BuildGroups() []svnconfig.Group {
+	groups := make([]svnconfig.Group, 0, len(f.groups.Items))
+	for i := range f.groups.Items {
+		g := &f.groups.Items[i]
+		users := make([]string, 0, len(f.users.Items))
+		for j := range f.users.Items {
+			u := &f.users.Items[j]
+			for k := range u.Spec.Groups {
+				if g.Name == u.Spec.Groups[k].Name {
+					users = append(users, u.Name)
+					break
+				}
+			}
+		}
+		groups = append(groups, svnconfig.Group{
+			Name:  g.Name,
+			Users: users,
+		})
+	}
+	return groups
+}
+
+func (f *GeneratorFactory) BuildUsers() []svnconfig.User {
+	users := make([]svnconfig.User, 0, len(f.users.Items))
+	for i := range f.users.Items {
+		u := &f.users.Items[i]
+		users = append(users, svnconfig.User{
+			Name:              u.Name,
+			EncryptedPassword: u.Spec.EncryptedPassword,
+		})
+	}
+	return users
 }
 
 // SetupWithManager sets up the controller with the Manager.
