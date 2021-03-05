@@ -26,6 +26,7 @@ import (
 // SVNRepositorySpec defines the desired state of SVNRepository
 type SVNRepositorySpec struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9][a-zA-Z0-9.-]*$"
 	// The name of the SVNServer
 	SVNServer string `json:"svnServer,omitempty"`
 }

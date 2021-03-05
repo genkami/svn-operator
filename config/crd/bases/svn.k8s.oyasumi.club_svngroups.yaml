@@ -48,11 +48,13 @@ spec:
                       description: The name of the SVNRepository to give access to.
                         The SVNRepository must reside in the same namespace as the
                         SVNGroup.
+                      pattern: ^[a-zA-Z0-9][a-zA-Z0-9.-]*$
                       type: string
                   type: object
                 type: array
               svnServer:
                 description: The name of the SVNServer
+                pattern: ^[a-zA-Z0-9][a-zA-Z0-9.-]*$
                 type: string
             type: object
           status:

@@ -26,7 +26,7 @@ import (
 // SVNUserSpec defines the desired state of SVNUser
 type SVNUserSpec struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9][a-zA-Z0-9.-]*$"
 	// The name of the SVNServer
 	SVNServer string `json:"svnServer,omitempty"`
 

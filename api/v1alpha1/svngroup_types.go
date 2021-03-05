@@ -26,6 +26,7 @@ import (
 // SVNGroupSpec defines the desired state of SVNGroup
 type SVNGroupSpec struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9][a-zA-Z0-9.-]*$"
 	// The name of the SVNServer
 	SVNServer string `json:"svnServer,omitempty"`
 
@@ -36,6 +37,7 @@ type SVNGroupSpec struct {
 
 type Permission struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9][a-zA-Z0-9.-]*$"
 	// The name of the SVNRepository to give access to.
 	// The SVNRepository must reside in the same namespace as the SVNGroup.
 	Repository string `json:"repository,omitempty"`

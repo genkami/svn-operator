@@ -3,5 +3,8 @@ kind: SVNUser
 metadata:
   name: svnuser-sample
 spec:
-  # Add fields here
-  foo: bar
+  svnServer: svnserver-sample
+  groups:
+    - svngroup-example
+  # The password is 'foobar'
+  encryptedPassword: $2y$05$lHorekjyyp9w2fXD/ppQLOJ2N1KmY.9yiJ0mZQlkIeUpUg8enPN4e
