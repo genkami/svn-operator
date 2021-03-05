@@ -15,6 +15,12 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go-version }}
+
+    - name: Install kubebuilder
+      uses: RyanSiu1995/kubebuilder-action@v1.1
+      with:
+        version: 2.3.1
+
     - name: Checkout code
       uses: actions/checkout@v2
 
