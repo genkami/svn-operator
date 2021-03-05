@@ -315,7 +315,7 @@ func (r *SVNServerReconciler) overrideWithPodTemplate(s *svnv1alpha1.SVNServer, 
 	}
 	if s.Spec.PodTemplate.Image != "" {
 		container.Image = s.Spec.PodTemplate.Image
-	} else if container.Image == "" {
+	} else {
 		container.Image = r.DefaultSVNServerImage
 	}
 
