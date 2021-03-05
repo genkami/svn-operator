@@ -3,5 +3,7 @@ kind: SVNGroup
 metadata:
   name: svngroup-sample
 spec:
-  # Add fields here
-  foo: bar
+  svnServer: svnserver-sample
+  permissions:
+  - repository: svnrepository-sample
+    permission: rw

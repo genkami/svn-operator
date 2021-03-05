@@ -54,6 +54,7 @@ spec:
                 type: array
               svnServer:
                 description: The name of the SVNServer
+                minLength: 1
                 type: string
             type: object
           status:

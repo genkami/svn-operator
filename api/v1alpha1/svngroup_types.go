@@ -40,7 +40,7 @@ type Permission struct {
 	// The SVNRepository must reside in the same namespace as the SVNGroup.
 	Repository string `json:"repository,omitempty"`
 
-	// +kubebuilder:validation:Pattern="r|rw|"
+	// +kubebuilder:validation:Pattern="^(?:r|rw|)$"
 	// The permission to access to the repository.
 	Permission string `json:"permission,omitempty"`
 }

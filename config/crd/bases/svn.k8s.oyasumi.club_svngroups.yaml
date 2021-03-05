@@ -42,7 +42,7 @@ spec:
                   properties:
                     permission:
                       description: The permission to access to the repository.
-                      pattern: r|rw|
+                      pattern: ^(?:r|rw|)$
                       type: string
                     repository:
                       description: The name of the SVNRepository to give access to.
