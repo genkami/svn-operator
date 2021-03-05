@@ -39,6 +39,7 @@ jobs:
     # Test
 
     - name: Test
+      shell: bash
       run: make test
 
     # Lint
