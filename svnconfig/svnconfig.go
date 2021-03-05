@@ -41,7 +41,7 @@ type Group struct {
 	Users []string
 }
 
-// Uesris a definition of a user.
+// User is a definition of a user.
 type User struct {
 	Name              string
 	EncryptedPassword string
