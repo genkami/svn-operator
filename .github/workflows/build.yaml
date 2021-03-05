@@ -39,7 +39,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/svn-operator/controller:${{ steps.variables.SHORT_SHA }}
+        tags: ghcr.io/${{ github.repository_owner }}/svn-operator/controller:${{ steps.variables.outputs.SHORT_SHA }}
 
     - name: Build and Push svn-server
       uses: docker/build-push-action@v2
@@ -47,12 +47,12 @@ jobs:
         context: .
         file: ./docker/Dockerfile.svnserver
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/svn-operator/svn-server:${{ steps.variables.SHORT_SHA }}
+        tags: ghcr.io/${{ github.repository_owner }}/svn-operator/svn-server:${{ steps.variables.outputs.SHORT_SHA }}
 
     - name: Build Manifests
       run: |
         cd config/manager
-        kustomize edit set image controller=ghcr.io/genkami/svn-operator/controller:${{ steps.variables.SHORT_SHA }}
+        kustomize edit set image controller=ghcr.io/genkami/svn-operator/controller:${{ steps.variables.outputs.SHORT_SHA }}
         cd ../..
         kustomize build config/default > artifacts/svn-operator.yaml
         kustomize build config/crd > artifacts/svn-operator.crds.yaml
