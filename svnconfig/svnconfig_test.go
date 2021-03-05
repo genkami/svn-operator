@@ -9,7 +9,7 @@ import (
 
 var _ = Describe("Svnconfig", func() {
 	Describe("AuthzSVNAccessFile", func() {
-		var config *svnconfig.Config
+		var config *svnconfig.Generator
 		render := func() string {
 			result, err := config.AuthzSVNAccessFile()
 			Expect(err).NotTo(HaveOccurred())
@@ -19,10 +19,10 @@ var _ = Describe("Svnconfig", func() {
 		Describe("section [groups]", func() {
 			Context("when the config is empty", func() {
 				It("generates an empty config file", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{},
-						Groups:       []*svnconfig.Group{},
-						Users:        []*svnconfig.User{},
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{},
+						Groups:       []svnconfig.Group{},
+						Users:        []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -33,10 +33,10 @@ var _ = Describe("Svnconfig", func() {
 
 			Context("when the config contains one group", func() {
 				BeforeEach(func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{},
-						Groups:       []*svnconfig.Group{{Name: "engen1"}},
-						Users:        []*svnconfig.User{},
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{},
+						Groups:       []svnconfig.Group{{Name: "engen1"}},
+						Users:        []svnconfig.User{},
 					}
 				})
 
@@ -76,10 +76,10 @@ engen1 = gura, ame, ina, calli, kiara
 
 			Context("when the config contains more than one groups", func() {
 				It("generates a list of groups separated by newline", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{},
-						Users:        []*svnconfig.User{},
-						Groups: []*svnconfig.Group{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{},
+						Users:        []svnconfig.User{},
+						Groups: []svnconfig.Group{
 							{"gen4", []string{"coco", "watame", "kanata", "luna", "towa"}},
 							{"gen5", []string{"nene", "polka", "lamy", "botan", "aloe"}},
 							{"gen999", []string{}},
@@ -99,12 +99,12 @@ gen999 =
 		Describe("section [REPO_NAME:/]", func() {
 			Context("when no group has access to the repository", func() {
 				It("drops all permissions", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{
-							{"therepo", []*svnconfig.Permission{}}},
-						Groups: []*svnconfig.Group{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{
+							{"therepo", []svnconfig.Permission{}}},
+						Groups: []svnconfig.Group{
 							{"fams", []string{"fubuki", "ayame", "mio", "subaru"}}},
-						Users: []*svnconfig.User{},
+						Users: []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -118,14 +118,14 @@ fams = fubuki, ayame, mio, subaru
 
 			Context("when the group have 'r' permission", func() {
 				It("grants 'r' permission to the group", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{
-							{"therepo", []*svnconfig.Permission{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{
+							{"therepo", []svnconfig.Permission{
 								{"smok", "r"},
 							}}},
-						Groups: []*svnconfig.Group{
+						Groups: []svnconfig.Group{
 							{"smok", []string{"subaru", "mio", "okayu", "korone"}}},
-						Users: []*svnconfig.User{},
+						Users: []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -140,14 +140,14 @@ smok = subaru, mio, okayu, korone
 
 			Context("when the group have 'rw' permission", func() {
 				It("grants 'rw' permission to the group", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{
-							{"therepo", []*svnconfig.Permission{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{
+							{"therepo", []svnconfig.Permission{
 								{"idgen2", "rw"},
 							}}},
-						Groups: []*svnconfig.Group{
+						Groups: []svnconfig.Group{
 							{"idgen2", []string{"ollie", "anya", "reine"}}},
-						Users: []*svnconfig.User{},
+						Users: []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -162,14 +162,14 @@ idgen2 = ollie, anya, reine
 
 			Context("when the permission of the group is explicitly dropped", func() {
 				It("grants no permission to the group", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{
-							{"therepo", []*svnconfig.Permission{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{
+							{"therepo", []svnconfig.Permission{
 								{"nenes", ""},
 							}}},
-						Groups: []*svnconfig.Group{
+						Groups: []svnconfig.Group{
 							{"nenes", []string{"nenechi", "supernenechi", "hypernenechi"}}},
-						Users: []*svnconfig.User{},
+						Users: []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -184,16 +184,16 @@ nenes = nenechi, supernenechi, hypernenechi
 
 			Context("when more than one groups can have access to the repository", func() {
 				It("grants corresponding permissions respectively", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{
-							{"therepo", []*svnconfig.Permission{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{
+							{"therepo", []svnconfig.Permission{
 								{"board", "r"},
 								{"mountains", "rw"},
 							}}},
-						Groups: []*svnconfig.Group{
+						Groups: []svnconfig.Group{
 							{"board", []string{"shion", "rushia", "kanata", "gura"}},
 							{"mountains", []string{"choco", "noel", "coco"}}},
-						Users: []*svnconfig.User{},
+						Users: []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -210,27 +210,27 @@ mountains = choco, noel, coco
 
 			Context("when more than one repositories are defined", func() {
 				It("generates list of repositories and its permissions", func() {
-					config = &svnconfig.Config{
-						Repositories: []*svnconfig.Repository{
-							{"therepo1", []*svnconfig.Permission{
+					config = &svnconfig.Generator{
+						Repositories: []svnconfig.Repository{
+							{"therepo1", []svnconfig.Permission{
 								{"edible", "r"},
 							}},
-							{"therepo2", []*svnconfig.Permission{
+							{"therepo2", []svnconfig.Permission{
 								{"edible", "rw"},
 								{"carnivore", "r"},
 							}},
-							{"therepo3", []*svnconfig.Permission{
+							{"therepo3", []svnconfig.Permission{
 								{"edible", ""},
 								{"carnivore", "r"},
 							}},
-							{"therepo4", []*svnconfig.Permission{
+							{"therepo4", []svnconfig.Permission{
 								{"carnivore", "rw"},
 							}},
 						},
-						Groups: []*svnconfig.Group{
+						Groups: []svnconfig.Group{
 							{"edible", []string{"watame", "ina", "kiara"}},
 							{"carnivore", []string{"botan", "gura"}}},
-						Users: []*svnconfig.User{},
+						Users: []svnconfig.User{},
 					}
 					Expect(render()).To(Equal(`
 [groups]
@@ -258,7 +258,7 @@ carnivore = botan, gura
 	})
 
 	Describe("AuthUserFile", func() {
-		var config *svnconfig.Config
+		var config *svnconfig.Generator
 		render := func() string {
 			result, err := config.AuthUserFile()
 			Expect(err).NotTo(HaveOccurred())
@@ -267,10 +267,10 @@ carnivore = botan, gura
 
 		Context("when users is empty", func() {
 			It("generates an empty file", func() {
-				config = &svnconfig.Config{
-					Repositories: []*svnconfig.Repository{},
-					Groups:       []*svnconfig.Group{},
-					Users:        []*svnconfig.User{},
+				config = &svnconfig.Generator{
+					Repositories: []svnconfig.Repository{},
+					Groups:       []svnconfig.Group{},
+					Users:        []svnconfig.User{},
 				}
 				Expect(render()).To(Equal(`
 
@@ -280,10 +280,10 @@ carnivore = botan, gura
 
 		Context("when there is a single user", func() {
 			It("generates an entry", func() {
-				config = &svnconfig.Config{
-					Repositories: []*svnconfig.Repository{},
-					Groups:       []*svnconfig.Group{},
-					Users: []*svnconfig.User{
+				config = &svnconfig.Generator{
+					Repositories: []svnconfig.Repository{},
+					Groups:       []svnconfig.Group{},
+					Users: []svnconfig.User{
 						{"noel", "$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6"},
 					},
 				}
@@ -296,10 +296,10 @@ noel:$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6
 
 		Context("when there are more than one users", func() {
 			It("generates all entries", func() {
-				config = &svnconfig.Config{
-					Repositories: []*svnconfig.Repository{},
-					Groups:       []*svnconfig.Group{},
-					Users: []*svnconfig.User{
+				config = &svnconfig.Generator{
+					Repositories: []svnconfig.Repository{},
+					Groups:       []svnconfig.Group{},
+					Users: []svnconfig.User{
 						{"noel", "$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6"},
 						{"coco", "$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy"},
 					},
@@ -314,7 +314,7 @@ coco:$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy
 	})
 
 	Describe("ReposConfig", func() {
-		var config *svnconfig.Config
+		var config *svnconfig.Generator
 		render := func() string {
 			result, err := config.ReposConfig()
 			Expect(err).NotTo(HaveOccurred())
@@ -323,10 +323,10 @@ coco:$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy
 
 		Context("when there is no repositories", func() {
 			It("returns an empty yaml", func() {
-				config = &svnconfig.Config{
-					Repositories: []*svnconfig.Repository{},
-					Groups:       []*svnconfig.Group{},
-					Users:        []*svnconfig.User{},
+				config = &svnconfig.Generator{
+					Repositories: []svnconfig.Repository{},
+					Groups:       []svnconfig.Group{},
+					Users:        []svnconfig.User{},
 				}
 				Expect(render()).To(Equal(`repositories: []
 `))
@@ -335,13 +335,13 @@ coco:$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy
 
 		Context("when repositories are given", func() {
 			It("returns a list of repository names", func() {
-				config = &svnconfig.Config{
-					Repositories: []*svnconfig.Repository{
+				config = &svnconfig.Generator{
+					Repositories: []svnconfig.Repository{
 						{"hoge", nil},
 						{"fuga", nil},
 					},
-					Groups: []*svnconfig.Group{},
-					Users:  []*svnconfig.User{},
+					Groups: []svnconfig.Group{},
+					Users:  []svnconfig.User{},
 				}
 				Expect(render()).To(Equal(`repositories:
 - name: hoge
