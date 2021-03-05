@@ -81,14 +81,14 @@ engen1 = gura, ame, ina, calli, kiara
 						Users:        []*svnconfig.User{},
 						Groups: []*svnconfig.Group{
 							{"gen4", []string{"coco", "watame", "kanata", "luna", "towa"}},
-							{"gen5", []string{"nene", "polka", "lamy", "botan"}},
+							{"gen5", []string{"nene", "polka", "lamy", "botan", "aloe"}},
 							{"gen999", []string{}},
 						},
 					}
 					Expect(render()).To(Equal(`
 [groups]
 gen4 = coco, watame, kanata, luna, towa
-gen5 = nene, polka, lamy, botan
+gen5 = nene, polka, lamy, botan, aloe
 gen999 = 
 
 `))

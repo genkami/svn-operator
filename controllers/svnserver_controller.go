@@ -495,6 +495,7 @@ func repositoryEnqueuer(mgr ctrl.Manager) handler.MapFunc {
 		svn, ok := obj.(*svnv1alpha1.SVNRepository)
 		if !ok {
 			mgr.GetLogger().Info("Not an SVNRepository", "object", obj)
+			return []reconcile.Request{}
 		}
 		return []reconcile.Request{{
 			NamespacedName: types.NamespacedName{
@@ -510,6 +511,7 @@ func groupEnqueuer(mgr ctrl.Manager) handler.MapFunc {
 		svn, ok := obj.(*svnv1alpha1.SVNGroup)
 		if !ok {
 			mgr.GetLogger().Info("Not an SVNGroup", "object", obj)
+			return []reconcile.Request{}
 		}
 		return []reconcile.Request{{
 			NamespacedName: types.NamespacedName{
@@ -525,6 +527,7 @@ func userEnqueuer(mgr ctrl.Manager) handler.MapFunc {
 		svn, ok := obj.(*svnv1alpha1.SVNUser)
 		if !ok {
 			mgr.GetLogger().Info("Not an SVNUser", "object", obj)
+			return []reconcile.Request{}
 		}
 		return []reconcile.Request{{
 			NamespacedName: types.NamespacedName{
