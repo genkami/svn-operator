@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Kustomize
+      uses: imranismail/setup-kustomize@v1
+      with:
+        kustomize-version: v3.9.2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GHCR_PERSONAL_ACCESS_TOKEN }}
+
+    - name: Declare Variables
+      id: variables
+      run: |
+        echo "::set-output name=SHORT_SHA::$(git rev-parse --short HEAD)"
+
+    - name: Build and Push svn-operator
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/svn-operator/controller:${{ steps.variables.SHORT_SHA }}
+
+    - name: Build and Push svn-server
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile.svnserver
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/svn-operator/svn-server:${{ steps.variables.SHORT_SHA }}
+
+    - name: Build Manifests
+      run: |
+        cd config/manager
+        kustomize edit set image controller=ghcr.io/genkami/svn-operator/controller:${{ steps.variables.SHORT_SHA }}
+        cd ../..
+        kustomize build config/default > artifacts/svn-operator.yaml
+        kustomize build config/crd > artifacts/svn-operator.crds.yaml
+
+    - name: Upload Manifests
+      uses: actions/upload-artifact@v2
+      with:
+        name: manifests
+        path: |
+          artifacts/*.yaml
+
