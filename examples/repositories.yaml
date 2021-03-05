@@ -1,0 +1,60 @@
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNRepository
+metadata:
+  name: svnrepository-sample
+spec:
+  svnServer: svnserver-sample
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNServer
+metadata:
+  name: svnserver-sample
+spec:
+  volumeClaimTemplate:
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 512M
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNGroup
+metadata:
+  name: svngroup-sample-reader
+spec:
+  svnServer: svnserver-sample
+  permissions:
+  - repository: svnrepository-sample
+    permission: r
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNGroup
+metadata:
+  name: svngroup-sample-writer
+spec:
+  svnServer: svnserver-sample
+  permissions:
+  - repository: svnrepository-sample
+    permission: rw
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNUser
+metadata:
+  name: svnuser-sample-reader
+spec:
+  svnServer: svnserver-sample
+  groups:
+    - name: svngroup-sample-reader
+  # The password is 'foobar'
+  encryptedPassword: $2y$05$lHorekjyyp9w2fXD/ppQLOJ2N1KmY.9yiJ0mZQlkIeUpUg8enPN4e
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNUser
+metadata:
+  name: svnuser-sample-writer
+spec:
+  svnServer: svnserver-sample
+  groups:
+    - name: svngroup-sample-writer
+  # The password is 'quux'
+  encryptedPassword: $2y$05$skzShfjCsTKCYcvr55ByIO5G7icGU8Lofs2CpmR5AoGho9OzBLb4O
