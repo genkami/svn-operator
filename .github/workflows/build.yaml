@@ -53,6 +53,7 @@ jobs:
       run: |
         cd config/manager
         kustomize edit set image controller=ghcr.io/genkami/svn-operator:${{ steps.variables.outputs.SHORT_SHA }}
+        cd ../default
         kustomize cfg set . svn-server-image ghcr.io/${{ github.repository_owner }}/svn-server:${{ steps.variables.outputs.SHORT_SHA }}
         cd ../..
         kustomize build config/default > artifacts/svn-operator.yaml
