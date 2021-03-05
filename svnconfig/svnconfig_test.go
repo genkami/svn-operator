@@ -312,4 +312,42 @@ coco:$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy
 			})
 		})
 	})
+
+	Describe("ReposConfig", func() {
+		var config *svnconfig.Config
+		render := func() string {
+			result, err := config.ReposConfig()
+			Expect(err).NotTo(HaveOccurred())
+			return result
+		}
+
+		Context("when there is no repositories", func() {
+			It("returns an empty yaml", func() {
+				config = &svnconfig.Config{
+					Repositories: []*svnconfig.Repository{},
+					Groups:       []*svnconfig.Group{},
+					Users:        []*svnconfig.User{},
+				}
+				Expect(render()).To(Equal(`repositories: []
+`))
+			})
+		})
+
+		Context("when repositories are given", func() {
+			It("returns a list of repository names", func() {
+				config = &svnconfig.Config{
+					Repositories: []*svnconfig.Repository{
+						{"hoge", nil},
+						{"fuga", nil},
+					},
+					Groups: []*svnconfig.Group{},
+					Users:  []*svnconfig.User{},
+				}
+				Expect(render()).To(Equal(`repositories:
+- name: hoge
+- name: fuga
+`))
+			})
+		})
+	})
 })

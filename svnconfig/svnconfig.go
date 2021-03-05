@@ -4,6 +4,8 @@ package svnconfig
 import (
 	"bytes"
 	"text/template"
+
+	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -37,6 +39,14 @@ type User struct {
 	EncryptedPassword string
 }
 
+type ReposConfig struct {
+	Repositories []*RepoEntry `json:"repositories"`
+}
+
+type RepoEntry struct {
+	Name string `json:"name,omitempty"`
+}
+
 func (c *Config) AuthzSVNAccessFile() (string, error) {
 	buf := bytes.NewBuffer(nil)
 	if err := tmplAuthzSVNAccessFile.Execute(buf, c); err != nil {
@@ -51,4 +61,20 @@ func (c *Config) AuthUserFile() (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func (c *Config) ReposConfig() (string, error) {
+	marshaled, err := yaml.Marshal(c.BuildReposConfig())
+	if err != nil {
+		return "", err
+	}
+	return string(marshaled), nil
+}
+
+func (c *Config) BuildReposConfig() *ReposConfig {
+	repos := []*RepoEntry{}
+	for _, r := range c.Repositories {
+		repos = append(repos, &RepoEntry{Name: r.Name})
+	}
+	return &ReposConfig{Repositories: repos}
 }
