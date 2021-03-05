@@ -273,6 +273,41 @@ carnivore = botan, gura
 					Users:        []*svnconfig.User{},
 				}
 				Expect(render()).To(Equal(`
+
+`))
+			})
+		})
+
+		Context("when there is a single user", func() {
+			It("generates an entry", func() {
+				config = &svnconfig.Config{
+					Repositories: []*svnconfig.Repository{},
+					Groups:       []*svnconfig.Group{},
+					Users: []*svnconfig.User{
+						{"noel", "$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6"},
+					},
+				}
+				Expect(render()).To(Equal(`
+noel:$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6
+
+`))
+			})
+		})
+
+		Context("when there are more than one users", func() {
+			It("generates all entries", func() {
+				config = &svnconfig.Config{
+					Repositories: []*svnconfig.Repository{},
+					Groups:       []*svnconfig.Group{},
+					Users: []*svnconfig.User{
+						{"noel", "$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6"},
+						{"coco", "$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy"},
+					},
+				}
+				Expect(render()).To(Equal(`
+noel:$2y$05$dM0mTvqGl8UqFgFY5CPxjO8jhqSntgSDlZeQK1XDwDKc2advIxEh6
+coco:$2y$05$Vfm5k2KgyNIGMjoML44UNOXg1v2J7EqpeonrX8uuILRF9Oho/YLPy
+
 `))
 			})
 		})

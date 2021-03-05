@@ -18,4 +18,7 @@ const rawTmplAuthzSVNAccessFile = `
 `
 
 const rawTmplAuthUserFile = `
+{{ range $ui, $u := .Users -}}
+{{- $u.Name}}:{{- $u.EncryptedPassword }}
+{{ end -}}{{/* .Users */}}
 `
