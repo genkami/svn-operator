@@ -132,7 +132,7 @@ fams = fubuki, ayame, mio, subaru
 smok = subaru, mio, okayu, korone
 [therepo:/]
 * = 
-smok = r
+@smok = r
 
 `))
 				})
@@ -154,7 +154,7 @@ smok = r
 idgen2 = ollie, anya, reine
 [therepo:/]
 * = 
-idgen2 = rw
+@idgen2 = rw
 
 `))
 				})
@@ -176,7 +176,7 @@ idgen2 = rw
 nenes = nenechi, supernenechi, hypernenechi
 [therepo:/]
 * = 
-nenes = 
+@nenes = 
 
 `))
 				})
@@ -201,8 +201,8 @@ board = shion, rushia, kanata, gura
 mountains = choco, noel, coco
 [therepo:/]
 * = 
-board = r
-mountains = rw
+@board = r
+@mountains = rw
 
 `))
 				})
@@ -238,18 +238,18 @@ edible = watame, ina, kiara
 carnivore = botan, gura
 [therepo1:/]
 * = 
-edible = r
+@edible = r
 [therepo2:/]
 * = 
-edible = rw
-carnivore = r
+@edible = rw
+@carnivore = r
 [therepo3:/]
 * = 
-edible = 
-carnivore = r
+@edible = 
+@carnivore = r
 [therepo4:/]
 * = 
-carnivore = rw
+@carnivore = rw
 
 `))
 				})
