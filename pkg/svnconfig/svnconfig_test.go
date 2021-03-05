@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/genkami/svn-operator/svnconfig"
+	"github.com/genkami/svn-operator/pkg/svnconfig"
 )
 
 var _ = Describe("Svnconfig", func() {

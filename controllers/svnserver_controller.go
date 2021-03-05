@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	svnv1alpha1 "github.com/genkami/svn-operator/api/v1alpha1"
-	svnconfig "github.com/genkami/svn-operator/svnconfig"
+	svnconfig "github.com/genkami/svn-operator/pkg/svnconfig"
 )
 
 const (
