@@ -156,6 +156,8 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	log.Info("reconciling SVNServer")
+
 	cfg := &GeneratorFactory{
 		server: svnServer,
 		repos:  repos,
@@ -183,7 +185,6 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "Failed to update StatefulSet")
 			return ctrl.Result{}, err
 		}
-		return ctrl.Result{Requeue: true}, nil
 	}
 
 	desiredCM := r.configMapFor(cfg)
@@ -192,7 +193,6 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "Failed to update ConfigMap")
 			return ctrl.Result{}, err
 		}
-		return ctrl.Result{Requeue: true}, nil
 	}
 
 	// TODO: Update SVNServer.Status
@@ -429,9 +429,6 @@ func (r *SVNServerReconciler) labelsFor(s *svnv1alpha1.SVNServer) map[string]str
 		LabelInstanceNameKey: s.Name,
 	}
 }
-
-// TODO
-type ValidationErrors struct{}
 
 func (f *GeneratorFactory) BuildGenerator() *svnconfig.Generator {
 	repos := f.BuildRepositories()

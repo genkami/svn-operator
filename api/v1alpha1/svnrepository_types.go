@@ -41,6 +41,8 @@ type SVNRepositoryStatus struct {
 // +kubebuilder:subresource:status
 
 // SVNRepository is the Schema for the svnrepositories API
+//
+// TODO: what if SVNRepository is deleted?
 type SVNRepository struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

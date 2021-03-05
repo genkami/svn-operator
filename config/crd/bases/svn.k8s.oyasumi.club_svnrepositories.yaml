@@ -19,7 +19,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: SVNRepository is the Schema for the svnrepositories API
+        description: "SVNRepository is the Schema for the svnrepositories API \n TODO:
+          what if SVNRepository is deleted?"
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
