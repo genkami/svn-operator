@@ -128,7 +128,9 @@ func (u *Updater) runCommand(cmd ...string) error {
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
-	if err != nil && errors.Is(err, os.ErrExist) {
+	if err == nil {
+		return true
+	} else if errors.Is(err, os.ErrExist) {
 		return true
 	}
 	return false
