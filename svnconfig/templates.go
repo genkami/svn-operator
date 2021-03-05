@@ -17,4 +17,5 @@ const rawTmplAuthzSVNAccessFile = `
 {{- end -}}{{/* .Repositories */}}
 `
 
-const rawTmplAuthUserFile = ``
+const rawTmplAuthUserFile = `
+`

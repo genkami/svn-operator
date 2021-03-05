@@ -256,4 +256,25 @@ carnivore = botan, gura
 			})
 		})
 	})
+
+	Describe("AuthUserFile", func() {
+		var config *svnconfig.Config
+		render := func() string {
+			result, err := config.AuthUserFile()
+			Expect(err).NotTo(HaveOccurred())
+			return result
+		}
+
+		Context("when users is empty", func() {
+			It("generates an empty file", func() {
+				config = &svnconfig.Config{
+					Repositories: []*svnconfig.Repository{},
+					Groups:       []*svnconfig.Group{},
+					Users:        []*svnconfig.User{},
+				}
+				Expect(render()).To(Equal(`
+`))
+			})
+		})
+	})
 })

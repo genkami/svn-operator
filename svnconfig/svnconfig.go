@@ -44,3 +44,11 @@ func (c *Config) AuthzSVNAccessFile() (string, error) {
 	}
 	return buf.String(), nil
 }
+
+func (c *Config) AuthUserFile() (string, error) {
+	buf := bytes.NewBuffer(nil)
+	if err := tmplAuthUserFile.Execute(buf, c); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
