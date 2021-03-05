@@ -1,10 +1,4 @@
 apiVersion: svn.k8s.oyasumi.club/v1alpha1
-kind: SVNRepository
-metadata:
-  name: svnrepository-sample
-spec:
-  svnServer: svnserver-sample
-apiVersion: svn.k8s.oyasumi.club/v1alpha1
 kind: SVNServer
 metadata:
   name: svnserver-sample
@@ -16,6 +10,13 @@ spec:
       resources:
         requests:
           storage: 512M
+---
+apiVersion: svn.k8s.oyasumi.club/v1alpha1
+kind: SVNRepository
+metadata:
+  name: svnrepository-sample
+spec:
+  svnServer: svnserver-sample
 ---
 apiVersion: svn.k8s.oyasumi.club/v1alpha1
 kind: SVNGroup
