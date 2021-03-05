@@ -161,7 +161,7 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	log.Info("reconciling SVNServer")
 
-	cfg := &GeneratorFactory{
+	factory := &GeneratorFactory{
 		server: svnServer,
 		repos:  repos,
 		groups: groups,
@@ -172,7 +172,7 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	err = r.Get(ctx, types.NamespacedName{Name: svnServer.Name, Namespace: svnServer.Namespace}, cm)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err = r.createConfigMap(ctx, log, cfg); err != nil {
+			if err = r.createConfigMap(ctx, log, factory); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{Requeue: true}, nil
@@ -190,7 +190,7 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	desiredCM := r.configMapFor(cfg)
+	desiredCM := r.configMapFor(factory)
 	if !reflect.DeepEqual(desiredCM.Data, cm.Data) {
 		if err := r.Update(ctx, desiredCM); err != nil {
 			log.Error(err, "Failed to update ConfigMap")
