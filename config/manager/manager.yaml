@@ -29,8 +29,6 @@ spec:
         - /manager
         args:
         - --leader-elect
-        - --image
-        - svn-server:latest # {"$openapi":"svn-server-image"}
         image: controller:latest
         name: manager
         securityContext:
