@@ -1,0 +1,11 @@
+apiVersion: config.k8s.io/v1alpha1
+kind: Krmfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.svn-server-image:
+      type: string
+      description: Docker image of the SVN server
+      x-k8s-cli:
+        setter:
+          name: svn-server-image
+          value: svn-server:latest

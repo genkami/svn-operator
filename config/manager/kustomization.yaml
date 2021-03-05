@@ -1,9 +1,7 @@
 resources:
 - manager.yaml
-
 generatorOptions:
   disableNameSuffixHash: true
-
 configMapGenerator:
 - name: manager-config
   files:

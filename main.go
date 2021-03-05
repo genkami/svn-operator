@@ -67,13 +67,8 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	// TODO: remove this
 	if defaultImage == "" {
-		defaultImage = os.Getenv("SVN_SERVER_IMAGE")
-	}
-
-	if defaultImage == "" {
-		setupLog.Info("command line option '-image' is required")
+		setupLog.Info("command line option '--image' is required")
 		os.Exit(1)
 	}
 
