@@ -22,9 +22,11 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	svnv1alpha1 "github.com/genkami/svn-operator/api/v1alpha1"
 )
@@ -68,6 +70,16 @@ var _ = Describe("SVNServer Controller", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+
+			statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+			statefulSet := &appsv1.StatefulSet{}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+				if err != nil {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })

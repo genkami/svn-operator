@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -24,6 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
@@ -40,6 +42,8 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+
+const defaultSVNServerImageForTest = "dummy-svn-server:latest"
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -71,6 +75,26 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	ctx := context.Background()
+	err = (&SVNServerReconciler{
+		Client:                k8sManager.GetClient(),
+		Scheme:                k8sManager.GetScheme(),
+		Log:                   ctrl.Log.WithName("controllers").WithName("SVNServer"),
+		DefaultSVNServerImage: defaultSVNServerImageForTest,
+	}).SetupWithManager(ctx, k8sManager)
+
+	go func() {
+		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		Expect(err).ToNot(HaveOccurred())
+	}()
+
+	k8sClient = k8sManager.GetClient()
+	Expect(k8sClient).ToNot(BeNil())
 }, 60)
 
 var _ = AfterSuite(func() {
