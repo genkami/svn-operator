@@ -42,7 +42,8 @@ type SVNRepositoryStatus struct {
 
 // SVNRepository is the Schema for the svnrepositories API
 //
-// TODO: what if SVNRepository is deleted?
+// The svn-operator does not delete actual repositories if SVNRepository resources are deleted. In such case, you can restore repositories by recreating SVNRepository resources.
+// Currently we do not provide methods to configure this behavior.
 type SVNRepository struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
