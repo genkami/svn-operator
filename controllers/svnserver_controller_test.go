@@ -382,4 +382,59 @@ var _ = Describe("SVNServer Controller", func() {
 			})
 		})
 	})
+
+	Describe(".Spec.PodTemplate.Tolerations", func() {
+		Context("when the field is not set", func() {
+			It("uses the default value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() ([]corev1.Toleration, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.Tolerations, nil
+				}, timeout, interval).Should(BeZero())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+
+		Context("when the field is set", func() {
+			It("uses the given value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				svnServer.Spec.PodTemplate.Tolerations = []corev1.Toleration{
+					{Key: "some-key", Operator: corev1.TolerationOpEqual, Value: "some-value", Effect: corev1.TaintEffectNoSchedule},
+				}
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() ([]corev1.Toleration, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.Tolerations, nil
+				}, timeout, interval).Should(Equal([]corev1.Toleration{
+					{Key: "some-key", Operator: corev1.TolerationOpEqual, Value: "some-value", Effect: corev1.TaintEffectNoSchedule},
+				}))
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+	})
 })
