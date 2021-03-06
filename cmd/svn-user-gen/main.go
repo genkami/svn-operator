@@ -64,7 +64,7 @@ func main() {
 	trimmedPassword := []byte(strings.TrimSuffix(string(password), "\n"))
 	encryptedPassword, err := bcrypt.GenerateFromPassword(trimmedPassword, cost)
 	if err != nil {
-		fmt.Println(os.Stderr, "error encrypting password", err)
+		fmt.Fprintln(os.Stderr, "error encrypting password", err)
 		os.Exit(1)
 	}
 
