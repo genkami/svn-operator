@@ -115,15 +115,16 @@ var _ = Describe("SVNServer Controller", func() {
 
 				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
 				statefulSet := &appsv1.StatefulSet{}
-				Eventually(func() bool {
+				Eventually(func() (string, error) {
 					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
-					return err == nil
-				}, timeout, interval).Should(BeTrue())
+					if err != nil {
+						return "", err
+					}
+					return statefulSet.Spec.Template.Spec.Containers[0].Image, nil
+				}, timeout, interval).Should(Equal(defaultSVNServerImageForTest))
 				defer func() {
 					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
 				}()
-
-				Expect(statefulSet.Spec.Template.Spec.Containers[0].Image).To(Equal(defaultSVNServerImageForTest))
 			})
 		})
 
@@ -146,6 +147,62 @@ var _ = Describe("SVNServer Controller", func() {
 					}
 					return statefulSet.Spec.Template.Spec.Containers[0].Image, nil
 				}, timeout, interval).Should(Equal("my-image:latest"))
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+	})
+
+	Describe(".Spec.PodTemplate.NodeSelector", func() {
+		Context("when the field is not set", func() {
+			It("uses the default value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() (map[string]string, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.NodeSelector, nil
+				}, timeout, interval).Should(BeZero())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+
+			})
+		})
+
+		Context("when the field is set", func() {
+			It("uses the given value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				svnServer.Spec.PodTemplate.NodeSelector = map[string]string{
+					"some-label": "some-value",
+				}
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() (map[string]string, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.NodeSelector, nil
+				}, timeout, interval).Should(Equal(map[string]string{
+					"some-label": "some-value",
+				}))
 				defer func() {
 					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
 				}()
