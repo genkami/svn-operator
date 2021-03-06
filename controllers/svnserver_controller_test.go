@@ -261,4 +261,54 @@ var _ = Describe("SVNServer Controller", func() {
 		})
 	})
 
+	Describe(".Spec.PodTemplate.ImagePullSecrets", func() {
+		Context("when the field is not set", func() {
+			It("uses the default value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() ([]corev1.LocalObjectReference, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.ImagePullSecrets, nil
+				}, timeout, interval).Should(BeZero())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+
+		Context("when the field is set", func() {
+			It("uses the given value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				svnServer.Spec.PodTemplate.ImagePullSecrets = []corev1.LocalObjectReference{{Name: "my-key"}}
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() ([]corev1.LocalObjectReference, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.ImagePullSecrets, nil
+				}, timeout, interval).Should(Equal([]corev1.LocalObjectReference{{Name: "my-key"}}))
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+	})
 })
