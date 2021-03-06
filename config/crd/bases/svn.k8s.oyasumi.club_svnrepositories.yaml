@@ -19,8 +19,10 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: "SVNRepository is the Schema for the svnrepositories API \n TODO:
-          what if SVNRepository is deleted?"
+        description: "SVNRepository is the Schema for the svnrepositories API \n The
+          svn-operator does not delete actual repositories if SVNRepository resources
+          are deleted. In such case, you can restore repositories by recreating SVNRepository
+          resources. Currently we do not provide methods to configure this behavior."
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

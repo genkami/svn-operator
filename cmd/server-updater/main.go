@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -32,20 +33,27 @@ import (
 )
 
 func main() {
+	var initdScript, svnAdmin string
+	var timeoutMs int
+	flag.StringVar(&initdScript, "initd-script", "/etc/init.d/apache2", "Path to /etc/init.d/apache2 (or its variant)")
+	flag.StringVar(&svnAdmin, "svnadmin", "/usr/bin/svnadmin", "Path to `svnadmin` command")
+	flag.IntVar(&timeoutMs, "exec-timeout", 10000, "Timeout to run commands")
+	flag.Parse()
+
 	zapLog, err := zap.NewProduction()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "failed to initialize logger", err)
 		os.Exit(1)
 	}
 	log := zapr.NewLogger(zapLog)
-	// TODO: add command line flag
+
 	u := &serverupdater.Updater{
-		InitdScript: "/etc/init.d/apache2",
-		SvnAdmin:    "/usr/bin/svnadmin",
+		InitdScript: initdScript,
+		SvnAdmin:    svnAdmin,
 		ReposConfig: filepath.Join(controllers.VolumePathConfig, controllers.ConfigMapKeyRepos),
 		ReposDir:    filepath.Join(controllers.VolumePathRepos, "repos"),
+		TimeoutMs:   timeoutMs,
 		Log:         log,
-		TimeoutMs:   10000,
 	}
 
 	watcher, err := fsnotify.NewWatcher()
