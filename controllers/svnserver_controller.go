@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"reflect"
+	"sort"
+	"time"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -55,6 +57,8 @@ const (
 	ConfigMapKeyRepos              = "Repos"
 
 	IndexKeySVNServer = ".spec.svnServer"
+
+	ConditionHistoryLimit = 10
 )
 
 // SVNServerReconciler reconciles a SVNServer object
@@ -176,9 +180,12 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	changed := false
+
 	desiredSS := ss.DeepCopy()
 	r.overrideWithPodTemplate(svnServer, desiredSS)
 	if !reflect.DeepEqual(desiredSS, ss) {
+		changed = true
 		if err := r.Update(ctx, desiredSS); err != nil {
 			log.Error(err, "Failed to update StatefulSet")
 			return ctrl.Result{}, err
@@ -191,13 +198,27 @@ func (r *SVNServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 	if !reflect.DeepEqual(desiredCM.Data, cm.Data) {
+		changed = true
 		if err := r.Update(ctx, desiredCM); err != nil {
 			log.Error(err, "Failed to update ConfigMap")
 			return ctrl.Result{}, err
 		}
 	}
 
-	// TODO: Update SVNServer.Status
+	if !changed {
+		return ctrl.Result{}, nil
+	}
+
+	svnServer.Status.Conditions = addCondition(svnServer.Status.Conditions, svnv1alpha1.Condition{
+		Type:           svnv1alpha1.ConditionTypeSynced,
+		Reason:         "successfully synced",
+		TransitionTime: time.Now().Format(time.RFC3339),
+	})
+
+	if err := r.Status().Update(ctx, svnServer); err != nil {
+		log.Error(err, "Failed to update SVNServer status")
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -528,6 +549,32 @@ func (f *GeneratorFactory) BuildUsers() []svnconfig.User {
 		})
 	}
 	return users
+}
+
+func addCondition(conds []svnv1alpha1.Condition, newCond svnv1alpha1.Condition) []svnv1alpha1.Condition {
+	conds = append(conds, newCond)
+	l := len(conds)
+	if l <= ConditionHistoryLimit {
+		return conds
+	}
+	sort.Slice(conds, func(ix, iy int) bool {
+		// Parsing times is relatively heavy, but we can ignore this cost because
+		// the number of elements in conds is very small.
+		tx, ex := time.Parse(time.RFC3339, conds[ix].TransitionTime)
+		ty, ey := time.Parse(time.RFC3339, conds[iy].TransitionTime)
+		// We consider invalid times as earlier than any valid times.
+		if ex != nil && ey != nil {
+			return false
+		} else if ex != nil {
+			return true
+		} else if ey != nil {
+			return false
+		}
+		return tx.Before(ty)
+	})
+
+	// l-ConditionHistoryLimit > 0 is guaranteed by the above condition.
+	return conds[l-ConditionHistoryLimit : l]
 }
 
 // SetupWithManager sets up the controller with the Manager.
