@@ -41,8 +41,8 @@ var _ = Describe("SVNServer Controller", func() {
 		interval = 250 * time.Millisecond
 	)
 
-	Context("When updating SVNServer Status", func() {
-		It("Updates its conditions", func() {
+	Context("When SVNServer Status is created", func() {
+		It("Creates corresponding resources automatically", func() {
 			By("creating a new SVNServer")
 			ctx := context.Background()
 			svnServer := &svnv1alpha1.SVNServer{
@@ -71,15 +71,26 @@ var _ = Describe("SVNServer Controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
 
+			By("checking whether the StatefulSet is created")
 			statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
 			statefulSet := &appsv1.StatefulSet{}
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, timeout, interval).Should(BeTrue())
+
+			By("checking whether SVNServer.Status.Conditions is updated")
+			svnServerLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+			createdSVNServer := &svnv1alpha1.SVNServer{}
+			Eventually(func() (int, error) {
+				err := k8sClient.Get(ctx, svnServerLookupKey, createdSVNServer)
+				if err != nil {
+					return -1, err
+				}
+				return len(createdSVNServer.Status.Conditions), nil
+			}, timeout, interval).Should(BeNumerically(">=", 1))
+			conds := createdSVNServer.Status.Conditions
+			Expect(conds[len(conds)-1].Type).To(Equal(svnv1alpha1.ConditionTypeSynced))
 		})
 	})
 })
