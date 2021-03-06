@@ -47,7 +47,7 @@ spec:
   groups:
     - name: svngroup-sample-reader
   # The password is 'foobar'
-  encryptedPassword: $2y$05$lHorekjyyp9w2fXD/ppQLOJ2N1KmY.9yiJ0mZQlkIeUpUg8enPN4e
+  encryptedPassword: $2a$10$bweNcG98x/EDjLhDbVY9.OcSl4Ln4fN.P6S.dj14TOs6M2ZLFs.y.
 ---
 apiVersion: svn.k8s.oyasumi.club/v1alpha1
 kind: SVNUser
@@ -58,4 +58,4 @@ spec:
   groups:
     - name: svngroup-sample-writer
   # The password is 'quux'
-  encryptedPassword: $2y$05$skzShfjCsTKCYcvr55ByIO5G7icGU8Lofs2CpmR5AoGho9OzBLb4O
+  encryptedPassword: $2a$10$lq/W8MK1zat62Eed5CzBbu4kwuXBPhV4xO.9rUZ17IPLtm2JK89sq
