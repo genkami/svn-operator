@@ -57,6 +57,9 @@ func main() {
 		log.Error(err, "failed to watch config files")
 		os.Exit(1)
 	}
+	// Volumes made from ConfigMaps stores all values inside ConfigMaps in `..data` directory.
+	// See https://github.com/kubernetes/kubernetes/blob/master/pkg/volume/util/atomic_writer.go
+	dataDir := filepath.Join(controllers.VolumePathConfig, "..data")
 
 	signals := make(chan os.Signal, 2)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
@@ -65,6 +68,9 @@ func main() {
 		select {
 		case ev := <-watcher.Events:
 			if ev.Op&(fsnotify.Create|fsnotify.Write) == 0 {
+				continue
+			}
+			if ev.Name != dataDir {
 				continue
 			}
 			log.Info("detected config change", "filename", ev.Name)
