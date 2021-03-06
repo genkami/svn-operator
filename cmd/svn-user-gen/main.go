@@ -3,12 +3,12 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"syscall"
 
-	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -16,8 +16,15 @@ import (
 func main() {
 	var err error
 	var user string
-	flag.StringVarP(&user, "user", "u", "", "The name of the user")
+	var cost int
+	flag.StringVar(&user, "user", "", "The name of the user")
+	flag.IntVar(&cost, "cost", bcrypt.DefaultCost, "The cost of bcrypt encryption")
 	flag.Parse()
+
+	if cost < bcrypt.MinCost || bcrypt.MaxCost < cost {
+		fmt.Fprintf(os.Stderr, "cost must be between %d and %d\n", bcrypt.MinCost, bcrypt.MaxCost)
+		os.Exit(1)
+	}
 
 	if user == "" {
 		fmt.Fprint(os.Stderr, "Username: ")
@@ -50,7 +57,7 @@ func main() {
 	}
 
 	trimmedPassword := []byte(strings.TrimSuffix(string(password), "\n"))
-	encryptedPassword, err := bcrypt.GenerateFromPassword(trimmedPassword, 5) // TODO
+	encryptedPassword, err := bcrypt.GenerateFromPassword(trimmedPassword, cost)
 	if err != nil {
 		fmt.Println(os.Stderr, "error encrypting password", err)
 		os.Exit(1)
