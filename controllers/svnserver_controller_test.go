@@ -209,4 +209,56 @@ var _ = Describe("SVNServer Controller", func() {
 			})
 		})
 	})
+
+	Describe(".Spec.PodTemplate.ServiceAccountName", func() {
+		Context("when the field is not set", func() {
+			It("uses the default value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() (string, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return "", err
+					}
+					return statefulSet.Spec.Template.Spec.ServiceAccountName, nil
+				}, timeout, interval).Should(BeZero())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+
+		Context("when the field is set", func() {
+			It("uses the given value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				svnServer.Spec.PodTemplate.ServiceAccountName = "my-account"
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() (string, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return "", err
+					}
+					return statefulSet.Spec.Template.Spec.ServiceAccountName, nil
+				}, timeout, interval).Should(Equal("my-account"))
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+	})
+
 })
