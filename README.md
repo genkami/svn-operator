@@ -1,5 +1,9 @@
 # svn-operator
 
+![ci status](https://github.com/genkami/svn-operator/workflows/Test/badge.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/genkami/svn-operator.svg)](https://pkg.go.dev/github.com/genkami/svn-operator)
+
+
 The svn-operator is a simple, opinionated operator that has following features:
 
 * Does not guarantee extremely high availability. (if an SVN server crashes, just wait for a second and retry.)
