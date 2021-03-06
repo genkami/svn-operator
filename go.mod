@@ -3,6 +3,7 @@ module github.com/genkami/svn-operator
 go 1.15
 
 require (
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
 	github.com/gorilla/mux v1.8.0

@@ -19,9 +19,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
-	"time"
+	"syscall"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 
@@ -46,13 +48,33 @@ func main() {
 		TimeoutMs:   10000,
 	}
 
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Error(err, "failed to initialize watcher")
+		os.Exit(1)
+	}
+	if err := watcher.Add(controllers.VolumePathConfig); err != nil {
+		log.Error(err, "failed to watch config files")
+		os.Exit(1)
+	}
+
+	signals := make(chan os.Signal, 2)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+
 	for {
-		// TODO: watch files and reload only if necessary
-		log.Info("detected config change")
-		err = u.OnConfigChanged()
-		if err != nil {
-			log.Error(err, "failed to update repository settings")
+		select {
+		case ev := <-watcher.Events:
+			if ev.Op&(fsnotify.Create|fsnotify.Write) == 0 {
+				continue
+			}
+			log.Info("detected config change", "filename", ev.Name)
+			err = u.OnConfigChanged()
+			if err != nil {
+				log.Error(err, "failed to update repository settings")
+			}
+		case sig := <-signals:
+			log.Info("caught signal; quitting", "signal", sig.String())
+			break
 		}
-		time.Sleep(10 * time.Second)
 	}
 }
