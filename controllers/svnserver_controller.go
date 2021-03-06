@@ -421,12 +421,18 @@ func (r *SVNServerReconciler) serviceFor(s *svnv1alpha1.SVNServer) (*corev1.Serv
 
 func (r *SVNServerReconciler) configMapFor(f *GeneratorFactory) (*corev1.ConfigMap, error) {
 	gen := f.BuildGenerator()
-	// TODO: error handling
-	authUserFile, _ := gen.AuthUserFile()
-	// TODO: error handling
-	authzSVNAccessFile, _ := gen.AuthzSVNAccessFile()
-	// TODO: error handling
-	reposConfig, _ := gen.ReposConfig()
+	authUserFile, err := gen.AuthUserFile()
+	if err != nil {
+		return nil, err
+	}
+	authzSVNAccessFile, err := gen.AuthzSVNAccessFile()
+	if err != nil {
+		return nil, err
+	}
+	reposConfig, err := gen.ReposConfig()
+	if err != nil {
+		return nil, err
+	}
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      f.server.Name,
@@ -438,7 +444,7 @@ func (r *SVNServerReconciler) configMapFor(f *GeneratorFactory) (*corev1.ConfigM
 			ConfigMapKeyRepos:              reposConfig,
 		},
 	}
-	err := ctrl.SetControllerReference(f.server, cm, r.Scheme)
+	err = ctrl.SetControllerReference(f.server, cm, r.Scheme)
 	if err != nil {
 		return nil, err
 	}
