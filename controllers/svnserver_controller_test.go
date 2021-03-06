@@ -311,4 +311,75 @@ var _ = Describe("SVNServer Controller", func() {
 			})
 		})
 	})
+
+	Describe(".Spec.PodTemplate.Affinity", func() {
+		Context("when the field is not set", func() {
+			It("uses the default value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() (*corev1.Affinity, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.Affinity, nil
+				}, timeout, interval).Should(BeZero())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+
+		Context("when the field is set", func() {
+			It("uses the given value", func() {
+				ctx := context.Background()
+				svnServer := defaultSVNServer()
+				svnServer.Spec.PodTemplate.Affinity = &corev1.Affinity{
+					NodeAffinity: &corev1.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+							NodeSelectorTerms: []corev1.NodeSelectorTerm{
+								{MatchFields: []corev1.NodeSelectorRequirement{
+									{Key: "some-key", Operator: corev1.NodeSelectorOpIn, Values: []string{"val1", "val2"}},
+								}},
+							},
+						},
+					},
+				}
+				Expect(k8sClient.Create(ctx, svnServer)).To(Succeed())
+				defer func() {
+					Expect(k8sClient.Delete(ctx, svnServer)).To(Succeed())
+				}()
+
+				statefulSetLookupKey := types.NamespacedName{Name: SVNServerName, Namespace: SVNServerNamespace}
+				statefulSet := &appsv1.StatefulSet{}
+				Eventually(func() (*corev1.Affinity, error) {
+					err := k8sClient.Get(ctx, statefulSetLookupKey, statefulSet)
+					if err != nil {
+						return nil, err
+					}
+					return statefulSet.Spec.Template.Spec.Affinity, nil
+				}, timeout, interval).Should(Equal(&corev1.Affinity{
+					NodeAffinity: &corev1.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+							NodeSelectorTerms: []corev1.NodeSelectorTerm{
+								{MatchFields: []corev1.NodeSelectorRequirement{
+									{Key: "some-key", Operator: corev1.NodeSelectorOpIn, Values: []string{"val1", "val2"}},
+								}},
+							},
+						},
+					},
+				}))
+				defer func() {
+					Expect(k8sClient.Delete(ctx, statefulSet)).To(Succeed())
+				}()
+			})
+		})
+	})
 })
