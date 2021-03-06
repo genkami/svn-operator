@@ -56,16 +56,14 @@ type Updater struct {
 	TimeoutMs int
 }
 
-func (u *Updater) OnAuthUserFileChanged() error {
-	return u.reloadApache()
-}
-
-func (u *Updater) OnAuthzSVNAccessFileChanged() error {
-	return u.reloadApache()
-}
-
-func (u *Updater) OnReposConfigChanged() error {
-	return u.createRepositories()
+func (u *Updater) OnConfigChanged() error {
+	if err := u.reloadApache(); err != nil {
+		return err
+	}
+	if err := u.createRepositories(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *Updater) reloadApache() error {

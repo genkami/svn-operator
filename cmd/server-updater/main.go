@@ -48,17 +48,10 @@ func main() {
 
 	for {
 		// TODO: watch files and reload only if necessary
-		err = u.OnReposConfigChanged()
+		log.Info("detected config change")
+		err = u.OnConfigChanged()
 		if err != nil {
-			log.Error(err, "failed to update repos")
-		}
-		err = u.OnAuthUserFileChanged()
-		if err != nil {
-			log.Error(err, "failed to reload apache")
-		}
-		err = u.OnAuthzSVNAccessFileChanged()
-		if err != nil {
-			log.Error(err, "failed to reload apache")
+			log.Error(err, "failed to update repository settings")
 		}
 		time.Sleep(10 * time.Second)
 	}
