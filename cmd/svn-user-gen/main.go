@@ -11,7 +11,7 @@ import (
 	"text/template"
 
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func main() {
@@ -43,14 +43,14 @@ func main() {
 	}
 
 	fmt.Fprint(os.Stderr, "Password: ")
-	password, err := terminal.ReadPassword(int(syscall.Stdin))
+	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error reading from stdin", err)
 		os.Exit(1)
 	}
 
 	fmt.Fprint(os.Stderr, "\nRe-type Password: ")
-	password2, err := terminal.ReadPassword(int(syscall.Stdin))
+	password2, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error reading from stdin", err)
 		os.Exit(1)
