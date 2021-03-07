@@ -6,7 +6,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
-	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.15.0
