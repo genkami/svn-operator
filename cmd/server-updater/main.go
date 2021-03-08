@@ -72,6 +72,12 @@ func main() {
 	signals := make(chan os.Signal, 2)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
+	log.Info("initializing")
+	err = u.OnConfigChanged()
+	if err != nil {
+		log.Error(err, "failed to initialize settings")
+	}
+
 	for {
 		select {
 		case ev := <-watcher.Events:
