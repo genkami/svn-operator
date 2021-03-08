@@ -20,10 +20,12 @@ func main() {
 	var cost int
 	var svnServer string
 	var svnGroups string
+	var password string
 	flag.StringVar(&user, "user", "", "The name of the user")
 	flag.StringVar(&svnServer, "svn-server", "TYPE_THE_SERVER_NAME_HERE", "The name of SVNServer resource")
 	flag.StringVar(&svnGroups, "svn-groups", "", "Comma-separated list of SVNGroups that the user belongs to")
 	flag.IntVar(&cost, "cost", bcrypt.DefaultCost, "The cost of bcrypt encryption")
+	flag.StringVar(&password, "password", "", "Password")
 	flag.Parse()
 
 	if cost < bcrypt.MinCost || bcrypt.MaxCost < cost {
@@ -42,27 +44,11 @@ func main() {
 		user = strings.TrimSuffix(user, "\n")
 	}
 
-	fmt.Fprint(os.Stderr, "Password: ")
-	password, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error reading from stdin", err)
-		os.Exit(1)
+	if password == "" {
+		password = getPassword()
 	}
 
-	fmt.Fprint(os.Stderr, "\nRe-type Password: ")
-	password2, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error reading from stdin", err)
-		os.Exit(1)
-	}
-
-	if !bytes.Equal(password, password2) {
-		fmt.Fprintln(os.Stderr, "password mismatch")
-		os.Exit(1)
-	}
-
-	trimmedPassword := []byte(strings.TrimSuffix(string(password), "\n"))
-	encryptedPassword, err := bcrypt.GenerateFromPassword(trimmedPassword, cost)
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error encrypting password", err)
 		os.Exit(1)
@@ -106,3 +92,25 @@ spec:
 {{- end -}}
 {{- end }}
 `
+
+func getPassword() string {
+	fmt.Fprint(os.Stderr, "Password: ")
+	password, err := term.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error reading from stdin", err)
+		os.Exit(1)
+	}
+
+	fmt.Fprint(os.Stderr, "\nRe-type Password: ")
+	password2, err := term.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error reading from stdin", err)
+		os.Exit(1)
+	}
+
+	if !bytes.Equal(password, password2) {
+		fmt.Fprintln(os.Stderr, "password mismatch")
+		os.Exit(1)
+	}
+	return strings.TrimSuffix(string(password), "\n")
+}
