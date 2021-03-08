@@ -14,8 +14,8 @@ The svn-operator is a simple, opinionated operator that has following features:
 ## Installation
 
 ```
-$ kubectl apply -f https://github.com/genkami/svn-operator/releases/download/v0.1.0/svn-operator.crds.yaml
-$ kubectl apply -f https://github.com/genkami/svn-operator/releases/download/v0.1.0/svn-operator.yaml
+$ kubectl apply -f https://github.com/genkami/svn-operator/releases/download/v0.2.0/svn-operator.crds.yaml
+$ kubectl apply -f https://github.com/genkami/svn-operator/releases/download/v0.2.0/svn-operator.yaml
 ```
 
 ## Examples
