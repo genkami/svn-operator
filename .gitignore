@@ -103,3 +103,4 @@ flycheck_*.el
 # End of https://www.toptal.com/developers/gitignore/api/go,emacs
 
 /artifacts
+.vscode
