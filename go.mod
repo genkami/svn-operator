@@ -7,7 +7,7 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/onsi/ginkgo v1.16.2
-	github.com/onsi/gomega v1.12.0
+	github.com/onsi/gomega v1.13.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56
