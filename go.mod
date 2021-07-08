@@ -4,8 +4,8 @@ go 1.15
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/go-logr/logr v0.4.0
-	github.com/go-logr/zapr v0.4.0
+	github.com/go-logr/logr v1.0.0-rc1
+	github.com/go-logr/zapr v1.0.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
 	go.uber.org/zap v1.18.1
