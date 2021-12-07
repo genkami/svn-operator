@@ -11,7 +11,7 @@ require (
 	go.uber.org/zap v1.18.1
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
-	k8s.io/api v0.19.2
+	k8s.io/api v0.23.0
 	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v0.19.2
 	sigs.k8s.io/controller-runtime v0.7.0
