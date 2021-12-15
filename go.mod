@@ -4,11 +4,11 @@ go 1.15
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/go-logr/logr v0.4.0
-	github.com/go-logr/zapr v0.4.0
+	github.com/go-logr/logr v1.2.2
+	github.com/go-logr/zapr v1.2.2
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
-	go.uber.org/zap v1.18.1
+	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	k8s.io/api v0.19.2
